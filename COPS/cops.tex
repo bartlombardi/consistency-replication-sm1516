@@ -152,13 +152,15 @@ L'interfaccia di COPS è composta da quattro operazioni (più una):
 % Il contesto contiene anche le dipendenze fra le variabili
 
 \begin{frame}
-\frametitle{Un esempio di dipendenze}
-Vediamo un esempio di contesto di un thread all'interno di COPS
-(riferito nel nostro caso a $z_4$):
+\frametitle{Dipendenze}
+COPS codifica le dipendenze all'interno di metadati associati ad ogni versione
+di una chiave. Di seguito presentiamo un esempio nel dettaglio:
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.35]{COPS/COPS4.png}
 \end{figure}
+La proliferazione di metadati riduce l'efficienza: possiamo affidarci
+alle 'nearest dependencies'!
 \end{frame}
 
 \begin{frame}
@@ -181,4 +183,16 @@ Presentiamo un esempio di pseudocodice della \texttt{get\char`_trans}:
 	\centering
 	\includegraphics[scale=0.40]{COPS/COPS5.png}
 \end{figure}
+\end{frame}
+
+\begin{frame}
+\frametitle{COPS: conclusioni}
+\begin{itemize}
+	\item<1-> Serve le operazioni localmente, replica in background \\
+			  (always on)
+	\item<1-> Partiziona lo spazio delle chiavi in più nodi \\
+			  (scalabilità)
+	\item<1-> Controllo delle repliche con il tracciamento delle dipendenze \\
+			  (casual+ consistency)
+\end{itemize}
 \end{frame}
