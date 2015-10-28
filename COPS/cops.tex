@@ -5,9 +5,9 @@
 	Un \textbf{sistema ALPS} è un sistema caratterizzato da 4 proprietà:
 	\begin{itemize}
 		\item<1-> Availability
-		\item<2-> Low Latency
-		\item<3-> Partition-tolerance
-		\item<4-> High Scalability
+		\item<1-> Low Latency
+		\item<1-> Partition-tolerance
+		\item<1-> High Scalability
 	\end{itemize}
 	\end{definizione}
 \end{frame}
@@ -28,9 +28,9 @@
 	\begin{itemize}
 		\item<1-> Se $a$ e $b$ sono due operazioni in un singolo thread di esecuzione
 				  allora $a \rightsquigarrow b$ se l'operazione $a$ accade prima dell'operazione $b$;
-		\item<2-> Se $a$ è un'operazione di \texttt{put} e $b$ è un'operazione di
+		\item<1-> Se $a$ è un'operazione di \texttt{put} e $b$ è un'operazione di
 				  \texttt{get} che ritorna il valore scritto da $a$, allora $a \rightsquigarrow b$;
-		\item<3-> Date tre operazioni $a$, $b$, $c$, se $a \rightsquigarrow b$ e $b 
+		\item<1-> Date tre operazioni $a$, $b$, $c$, se $a \rightsquigarrow b$ e $b 
 				  \rightsquigarrow c$, allora $a \rightsquigarrow c$.
 	\end{itemize}
 	\end{definizione}
@@ -52,7 +52,7 @@ Definiamo la \textbf{Causal Consistency +} implementata da COPS come una combina
 		\item<1-> Causal Consistency \\
 				  I valori restituiti da un'operazione di \texttt{get} da una replica sono 
 				  consistenti con l'ordine definito da $\rightsquigarrow$;
-		\item<2-> Convergent conflict handling \\
+		\item<1-> Convergent conflict handling \\
 				  Tutte le operazioni di \texttt{put} in conflitto vengono gestite nello
 				  stesso modo da tutte le repliche, usando una funzione di gestione $h$.
 	\end{itemize}
@@ -102,7 +102,7 @@ COPS può gestire conflitti in diversi modi a seconda dell'implementazione:
 				  % La regola dice che se TS(T) < WTS(O), la corrente azione di scrittura è stata resa 
 				  % obsoleta dalla più recente operazione di scrittura di O, che segue la scrittura corrente 
 				  % basandosi sull'ordinamento del Timestamp.
-		\item<2-> Marking dei conflitti e risoluzione con altri mezzi.
+		\item<1-> Marking dei conflitti e risoluzione con altri mezzi.
 	\end{itemize}
 \end{block}
 Non vengono usati i Vector Clock come invece avviene in Amazon Dynamo perché
@@ -115,7 +115,7 @@ si ritiene che in un sistema troppo grande potrebbero andare fuori controllo.
 COPS è formato da due componenti principali:
 \begin{itemize}
 	\item<1-> Key-value store
-	\item<2-> Client library
+	\item<1-> Client library
 \end{itemize}
 \end{block}
 \begin{figure}
@@ -132,10 +132,10 @@ COPS è formato da due componenti principali:
 L'interfaccia di COPS è composta da quattro operazioni (più una):
 \begin{itemize}
 	\item<1-> \textit{ctx\char`_id} $\leftarrow$ \texttt{createContext()}
-	\item<2-> \textit{bool} $\leftarrow$ \texttt{deleteContext}\textit{(ctx\char`_id)}
-	\item<3-> \textit{bool} $\leftarrow$ \texttt{put}\textit{(key, value, ctx\char`_id)}
-	\item<4-> \textit{value} $\leftarrow$ \texttt{get}\textit{(key, ctx\char`_id)}
-	\item<5-> \textit{values} $\leftarrow$ \texttt{get\char`_trans}\textit{(keys, ctx\char`_id)}
+	\item<1-> \textit{bool} $\leftarrow$ \texttt{deleteContext}\textit{(ctx\char`_id)}
+	\item<1-> \textit{bool} $\leftarrow$ \texttt{put}\textit{(key, value, ctx\char`_id)}
+	\item<1-> \textit{value} $\leftarrow$ \texttt{get}\textit{(key, ctx\char`_id)}
+	\item<1-> \textit{values} $\leftarrow$ \texttt{get\char`_trans}\textit{(keys, ctx\char`_id)}
 \end{itemize}
 \begin{figure}
 	\centering
