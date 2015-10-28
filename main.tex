@@ -1,0 +1,35 @@
+\documentclass[10pt]{beamer}
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{listings}
+
+\title{Consistency and Replication}
+\author{Bartolomeo Lombardi \\ Amerigo Mancino \\ Andrea Segalini}
+\date{10 novembre 2015}
+
+\theoremstyle{definition}
+\newtheorem{definizione}{Definizione}
+
+\usetheme{Antibes}
+%\useoutertheme[right]{sidebar}
+\setbeamercovered{dynamic}
+
+\begin{document}
+
+% rimozione header dalla slide del titolo
+{
+\makeatletter
+    \setbeamertemplate{headline}[default]
+    \def\beamer@entrycode{\vspace*{-\headheight}}
+\makeatother
+\begin{frame}
+	\maketitle
+\end{frame}
+}
+
+\input{dynamo/dynamo.tex}
+
+\input{COPS/cops.tex}
+
+\end{document}
