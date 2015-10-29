@@ -46,7 +46,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 \begin{frame}
 \frametitle{Alcuni tipi di consistenza}
 \begin{enumerate}
-  \item \textbf{Strong Consistency}: garantisce che l'operazione di lettura ritorna il valore dell'ultima scrittura.
+  \item \textbf{Strong Consistency}: garantisce che l'operazione di lettura ritorni il valore dell'ultima scrittura.
   \item \textbf{Eventual Consistency}: è la più debole delle altre, poiché permette di avere come valore di ritorno il più grande insieme di possibilità.
   \item \textbf{Consistent Prefix}: osserva l'ordine di sequenza delle scritture e ritorna l'ultima.
   \item \textbf{Bounded Staleness}: assicura che il risultato della lettura non sia scaduto, ovvero per ogni dato definisce un periodo di tempo $T$ 'staleness' e garantisce che l'operazione di lettura ritorni un qualsiasi valore scritto fra $T$ e il più recente.
@@ -56,14 +56,14 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 \end{frame}
 
 \begin{frame}
-\frametitle{}
+\frametitle{Consistenze a confronto}
 	\begin{figure}
 		\includegraphics[scale=0.5]{baseball/tab2.jpg}
 	\end{figure}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Il baseball}
+\frametitle{Il baseball in pseudocodice}
 \begin{verbatim}
  Write ("visitors", 0);
  Write ("home", 0);
@@ -85,7 +85,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 \end{frame}
 
 \begin{frame}
-\frametitle{La consistenza nel baseball}
+\frametitle{Un esempio}
 	\begin{figure}
 		\includegraphics[scale=0.4]{baseball/tab3a.jpg}\\
 		\includegraphics[scale=0.4]{baseball/tab3.jpg}
