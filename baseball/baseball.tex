@@ -64,7 +64,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 
 \begin{frame}[fragile]
 \frametitle{Il baseball in pseudocodice}
-\begin{verbatim}
+\begin{lstlisting}
  Write ("visitors", 0);
  Write ("home", 0);
    for inning = 1 .. 9
@@ -81,7 +81,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
          score = Read ("home");
          Write ("home", score + 1);
  end game;
-\end{verbatim}
+\end{lstlisting}
 \end{frame}
 
 \begin{frame}
@@ -90,4 +90,105 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 		\includegraphics[scale=0.4]{baseball/tab3a.jpg}\\
 		\includegraphics[scale=0.4]{baseball/tab3.jpg}
 	\end{figure}
+\end{frame}
+
+\begin{frame}
+ \frametitle{Soggetti del baseball}
+ Nel gioco del baseball vi sono differenti soggetti con diversi ruoli, ognuno di essi necessita di un tipo di consistenza:
+ \begin{itemize}
+   \item Segnapunti
+   \item Arbitro
+   \item Radiocronista
+   \item Giornalista sportivo
+   \item Statistico
+   \item Osservatore
+ \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Segnapunti}
+  \begin{lstlisting}
+    score = Read ("visitors");
+    Write ("visitors", score + 1);
+  \end{lstlisting}
+  \begin{block}{Consistenza desiderata}
+    Read My Writes
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Arbitro}
+  \begin{lstlisting}
+    if first half of 9th inning complete then
+      vScore = Read ("visitors");
+      hScore = Read ("home");
+      if vScore < hScore
+        end game;
+  \end{lstlisting}
+ \begin{block}{Consistenza desiderata}
+   Strong Consistency
+ \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Radiocronista}
+  \begin{lstlisting}
+    do {
+        vScore = Read ("visitors");
+        hScore = Read ("home");
+        report vScore and hScore;
+        sleep (30 minutes);
+    }
+  \end{lstlisting}
+  \begin{block}{Consistenza desiderata}
+    \begin{itemize}
+      \item Consistent Prefix
+      \item Monotonic Reads
+      \item Bounded Staleness
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Giornalista sportivo}
+  \begin{lstlisting}
+    While not end of game {
+      drink beer;
+      smoke cigar;
+    }
+    go out to dinner;
+    vScore = Read ("visitors");
+    hScore = Read ("home");
+    write article;
+  \end{lstlisting}
+  \begin{block}{Consistenza desiderata}
+    
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Statistico}
+  \begin{lstlisting}
+    Wait for end of game;
+    score = Read ("home");
+    stat = Read ("season-runs");
+    Write ("season-runs", stat + score);
+  \end{lstlisting}
+  \begin{block}{Consistenza desiderata}
+   
+   \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Osservatore}
+  \begin{lstlisting}
+    do {
+        stat = Read ("season-runs");
+        discuss stats with friends;
+        sleep (1 day);
+    }
+  \end{lstlisting}
+  \begin{block}{Consistenza desiderata}
+   
+  \end{block}
 \end{frame}
