@@ -1,5 +1,215 @@
 \section{Dynamo}
 \begin{frame}
+  %\frametitle{Dynamo}
+  todo
+\end{frame}
+
+
+\begin{frame}
   \frametitle{Dynamo}
+  \begin{block}{Cos'è Dynamo:}
+  Dynamo è un sistema di key-value storage distribuito.
+  \end{block}
+  \begin{block}{Obiettivi:}      
+      \begin{itemize}
+      \item ``Always on'' experience.
+      \item Scalabilità.
+      \item Alte performance - bassa latenza.
+      \item Eventual consistency.
+      \end{itemize}
+  \end{block}
+  In realtà il sistema è altamente configurabile, è possibile migliorare alcuni aspetti a scapito di altri...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Architettura del Sistema}
+  Scomponiamo il sistema in base alle tecniche utilizzate:
+  \begin{center}
+  \begin{tabular}{l | l}
+    \textbf{Partizionamento e replicazione} & Consistent hashing \\
+    \hline
+    \textbf{Versionamento}                  & Vector clock \\
+    \hline
+    \textbf{Consistenza operazioni}         & Quorum likeness \\
+    \hline
+    \textbf{Gestione fallimenti}            & Sloppy quorum, \\
+                                            & hinted handoff, \\
+                                            & Merkle tree 
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Partizionamento (I)}
+  \begin{itemize}
+  \item Chiavi e valori sono visti come semplici array di byte.
+  \item Si usa MD5 a 128 bit per indicizzare le chiavi.
+  \item Tecnica del \alert{consistent hashing} per la distribuzione.
+  \end{itemize}
   
 \end{frame}
+
+
+\begin{frame}
+  \frametitle{Partizionamento (II)}
+  Dynamo propone una variante del consistent hashing: \\
+  Si utilizzano i \alert{nodi virtuali} (tokens).
+  \begin{block}{Vantaggi del consistent hashing di Dynamo:}
+  \begin{itemize}
+  \item Dati distribuiti uniformemente.
+  \item Aggiungere o togliere nodi influenza solo il ``successore''.
+  \item Bilanciamento del carico a seguito di un fallimento.
+  \item Si tiene conto dell'eterogeneità delle macchine.
+  \end{itemize}
+  \end{block}
+  $\longrightarrow$ In poche parole si ottiene una forte \alert{scalabilità}.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Replicazione}
+  Ogni nodo effettua una replica sugli $N$ nodi successivi (senso orario).
+  \begin{itemize}
+  \item L'insieme dei nodi che ospitano il medesimo intervallo di chiavi è detto \alert{preference list}.
+  \item I nodi virtuali sono saltati lungo l'anello.
+  \item L'aggiornamente delle repliche è \alert{asincrono}.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Versionamento (I)}
+  Ogni modifica viene trattata dal sistema come un nuovo oggetto.
+  
+  Si utilizzano i \alert{vector clock} ($\vclock$) per tenere traccia delle versioni:
+
+  \begin{definizione}
+    Siano $x$ e $y$ due versioni del medesimo oggetto, denotiamo con $\vclock(x)_z$ il vector clock di $x$ relativo al nodo $z$.
+    \begin{multline*}
+    \vclock(x) < \vclock(y) \iff \\
+      \forall z \mathrel{:} \bigg( \vclock(x)_z \leq \vclock(y)_z \land \exists z' \mathrel{:} \vclock(x)_{z'} < \vclock(y)_{z'} \bigg) 
+    \end{multline*}
+  \end{definizione}
+
+  Si ottiene un ordinamento parziale sulle versioni:
+  \begin{itemize}
+  \item Se $\vclock(x) < \vclock(y)$ allora la versione $y$ può sovvrascrivere $x$.
+  \item Altrimenti abbiamo un branching delle versioni che il sistema non può riconciliare autonomamente.
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{Versionamento (II)}
+  Un esempio:
+
+  \begin{block}{Pro dell'uso dei vector clock:}
+    \begin{itemize}
+    \item Rispetto all'utilizzo di un timestamp logico si ottiene un ordinamento parziale tra le versioni.
+    \item I vari branch di versionamento vengono tutti individuati e ritornati per una riconcialiazione da parte del client.
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Contro:}
+    \begin{itemize}
+    \item La dimensione dei vector clock può crescere tanto...
+    \item ...in realtà solo in casi di ripetuti fallimenti o partizionamento della rete.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Garantire la Consistenza}
+  \begin{itemize}
+  \item Operazione di \texttt{get} e \texttt{put}:
+    \begin{itemize}
+    \item \texttt{get(key) : <value, context>}
+    \item \texttt{put(key, value, context)}
+    \end{itemize}
+  \end{itemize}
+  \begin{itemize}
+  \item La consistenza è ottenuta mediante la tecnica del \alert{quorum}:
+    \begin{itemize}
+    \item $W$: ($W \leq N$) numero di nodi che contribuiscono alla scrittura.
+    \item $R$: ($R \leq N$) numero di nodi che contribuiscono alla lettura.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Operazione \texttt{get}}
+  $N = 3, W = 2, R = 2.$
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Operazione \texttt{put}}
+  $N = 3, W = 2, R = 2.$
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Proprietà di un quorum-like system}
+  \begin{block}{Se $R + W > N:$}
+    \begin{itemize}
+      \item in assenza di fallimenti abbiamo \alert{strong consistency}.
+    \end{itemize}
+  \end{block}
+  \begin{block}{Se $R + W \leq N:$}
+    \begin{itemize}
+    \item ottengo \alert{eventual consistency} a vari livelli...
+    \item $W = 1$: always writable (high availability).
+    \item $R = 1$: always readable (high availability).
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Rissumendo su $W, R$}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Sloppy Quorum e Gestione Fallimenti}
+  \begin{block}{Problema:}
+    Bastano pochi fallimenti nella ``top $N$'' della preference list per impedire il raggiungimento del quorum.    
+  \end{block}
+  \begin{block}{Si utilizza lo ``sloppy quorum'':}
+  \begin{itemize}
+  \item Durante un'operazione si contattano i primi $N$ nodi \alert{sani} nella preference list (si scorre in senso orario l'anello).
+  \item La replica che normalmente risiederebbe sul nodo fallito viene traferita al nodo supplente.
+  \end{itemize}
+  \end{block}
+  $\longrightarrow$ Quando i nodi falliti ritornano in servizio nasce un problema di inconsistenza. 
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Gestione Fallimenti e Sincronia Repliche}
+  \begin{block}{Hinted handoff}
+  \begin{itemize}
+  \item La replica spedita al nodo ``supplente'' contiene un \alert{hint}.
+  \item Il nodo supplente si preoccupa di verificare periodicamente lo stato del nodo che sta sostituendo.
+  \item Non appena possibile viene restituita la replica aggiornata al nodo fallito.
+  \end{itemize}
+  In questo modo si minimizza la finestra di vulnerabilità.
+  \end{block}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Membership e Rilevamento Fallimenti}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Concludendo su Dynamo}
+  \begin{block}{Vantaggi di Dynamo:}
+  \end{block}
+  \begin{block}{Svantaggi:}
+  \end{block}
+\end{frame}
+
