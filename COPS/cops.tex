@@ -1,20 +1,26 @@
 \section{COPS}
 \begin{frame}
 \frametitle{COPS}
-Presentiamo, in questa sezione, il design di COPS, un key-value store
-distribuito in un'ampia area che implementa un particolare tipo di consistenza.
+Presentiamo, in questa sezione, il design di COPS (Cluster of Order-Preserving Servers),
+un key-value store distribuito in un'ampia area che implementa un particolare tipo di consistenza.
 \end{frame}
 
 \begin{frame}
 \frametitle{Sistema ALPS}
 	\begin{definizione}
 	Un \textbf{sistema ALPS} è un sistema caratterizzato da 4 proprietà:
-	\begin{itemize}
-		\item<1-> Availability
-		\item<1-> Low Latency
-		\item<1-> Partition-tolerance
-		\item<1-> High Scalability
-	\end{itemize}
+	\begin{enumerate}
+		\item<1-> Availability \\
+				  Ogni richiesta riceve una risposta su ciò che è riuscito o fallito.
+		\item<1-> Low Latency \\
+				  Le operazioni completano velocemente.
+		\item<1-> Partition-tolerance \\
+				  Il sistema continua a funzionare nonostante arbitrarie perdite di messaggi:
+				  in questi casi alcuni nodi possono rimanere isolati dagli altri e non avere
+				  più informazioni aggiornate (sono partizionati).
+		\item<1-> High Scalability \\
+				  Possiamo aumentare la capacità del sistema.
+	\end{enumerate}
 	\end{definizione}
 \end{frame}
 
@@ -31,14 +37,17 @@ distribuito in un'ampia area che implementa un particolare tipo di consistenza.
 	\begin{definizione}
 	Definiamo il \textbf{potenziale di causalità} fra operazioni (e lo denotiamo con $\rightsquigarrow$)
 	mediante tre regole:
-	\begin{itemize}
-		\item<1-> Se $a$ e $b$ sono due operazioni in un singolo thread di esecuzione
+	\begin{enumerate}
+		\item<1-> \textbf{Execution thread.}
+				  Se $a$ e $b$ sono due operazioni in un singolo thread di esecuzione
 				  allora $a \rightsquigarrow b$ se l'operazione $a$ accade prima dell'operazione $b$;
-		\item<1-> Se $a$ è un'operazione di \texttt{put} e $b$ è un'operazione di
+		\item<1-> \textbf{Gets From.}
+				  Se $a$ è un'operazione di \texttt{put} e $b$ è un'operazione di
 				  \texttt{get} che ritorna il valore scritto da $a$, allora $a \rightsquigarrow b$;
-		\item<1-> Date tre operazioni $a$, $b$, $c$, se $a \rightsquigarrow b$ e $b 
+		\item<1-> \textbf{Transitivity.}
+				  Date tre operazioni $a$, $b$, $c$, se $a \rightsquigarrow b$ e $b 
 				  \rightsquigarrow c$, allora $a \rightsquigarrow c$.
-	\end{itemize}
+	\end{enumerate}
 	\end{definizione}
 \end{frame}
 
@@ -51,16 +60,17 @@ distribuito in un'ampia area che implementa un particolare tipo di consistenza.
 \end{frame}
 
 \begin{frame}
-\frametitle{Casual Consistency +}
+\frametitle{Casual+ Consistency}
 \begin{definizione}
-Definiamo la \textbf{Causal Consistency +} implementata da COPS come una combinazione di due proprietà:
+Definiamo la \textbf{Causal+ Consistency} implementata da COPS come una combinazione di due proprietà:
 	\begin{itemize}
 		\item<1-> Causal Consistency \\
 				  I valori restituiti da un'operazione di \texttt{get} da una replica sono 
 				  consistenti con l'ordine definito da $\rightsquigarrow$;
 		\item<1-> Convergent conflict handling \\
 				  Tutte le operazioni di \texttt{put} in conflitto vengono gestite nello
-				  stesso modo da tutte le repliche, usando una funzione di gestione $h$.
+				  stesso modo da tutte le repliche, usando una funzione di gestione $h$ (associativa
+				  e commutativa).
 	\end{itemize}
 \end{definizione}
 
@@ -72,12 +82,21 @@ due operazione di \texttt{put} sulla stessa chiave.
 
 \begin{frame}
 \frametitle{Consistenze a confronto}
+\begin{block}{Consistenza sequenziale}
+Il risultato di qualunque operazione è uguale a quello ottenuto se le operazioni
+di read e di write da parte di tutti i processi sullo archivio di dati fossero eseguite:
+	\begin{enumerate}
+		\item in un qualche ordine sequenziale;
+		\item le operazioni di ogni singolo processo appaiono comunque in questa sequenza
+			  nell'ordine specificato dal programma
+	\end{enumerate}
+\end{block}	
 	\begin{figure}
 		\centering
 		\includegraphics[scale=0.35]{COPS/COPS6.png}
 	\end{figure}
 
-Se in Amazon Dynamo abbiamo una consistenza che può oscillare fra Strong, Weak, Eventual,
+Se in Dynamo abbiamo una consistenza che può oscillare fra Strong, Weak, Eventual,
 in COPS la definizione risulta più netta: si cerca di implementare il meglio che si può
 avere con le caratteristiche ALPS.
 \end{frame}
@@ -96,23 +115,6 @@ Ci riferiamo a differenti valori di una data chiave come alla loro \textbf{versi
 Diciamo che $y_i$ \textbf{dipende da} $x_i$ se e solo se \texttt{put}$(x_i)
 \rightsquigarrow$ \texttt{put}$(y_i)$.
 \end{block}
-\end{frame}
-
-\begin{frame}
-\frametitle{Gestione dei conflitti}
-\begin{block}{Conflict handling}
-COPS può gestire conflitti in diversi modi a seconda dell'implementazione:
-	\begin{itemize}
-		\item<1-> Last-writer-win-rule \\
-				  (detta Thomas Write rule e basata su Timestamp);
-				  % La regola dice che se TS(T) < WTS(O), la corrente azione di scrittura è stata resa 
-				  % obsoleta dalla più recente operazione di scrittura di O, che segue la scrittura corrente 
-				  % basandosi sull'ordinamento del Timestamp.
-		\item<1-> Marking dei conflitti e risoluzione con altri mezzi.
-	\end{itemize}
-\end{block}
-Non vengono usati i Vector Clock come invece avviene in Amazon Dynamo perché
-si ritiene che in un sistema troppo grande potrebbero andare fuori controllo.
 \end{frame}
 
 \begin{frame}
@@ -151,16 +153,62 @@ L'interfaccia di COPS è composta da quattro operazioni (più una):
 % Il contesto mi permette di separare e riconoscere i diversi thread di esecuzione
 % Il contesto contiene anche le dipendenze fra le variabili
 
+%\begin{frame}
+%\frametitle{Il contesto}
+%La client library in COPS salva il contesto di un client in una tabella con entry
+%($key$,$version$). Quando viene fatta un'operazione di \texttt{get}, la corrispondente ($key$, $version$)
+%è aggiunta al contesto. Quando viene fatta un'operazione di \texttt{put}, viene controllato il
+%contesto per stabilire se le dipendenze sono soddisfatte, poi la library imposta
+%le dipendenze della \texttt{put} alla loro ultima versione e infine aggiunge la nuova entry ($key$, $version$)
+%al contesto.
+%\end{frame}
+
 \begin{frame}
 \frametitle{Dipendenze}
-COPS codifica le dipendenze all'interno di metadati associati ad ogni versione
-di una chiave. Di seguito presentiamo un esempio nel dettaglio:
+%COPS codifica le dipendenze all'interno di metadati associati ad ogni versione
+%di una chiave. Di seguito presentiamo un esempio nel dettaglio:
+Il contesto permette di identificare il thread di esecuzione di un processo e
+di tracciare le dipendenze causali che si vengono a generare quando vengono
+eseguite operazioni di \texttt{put} e \texttt{get}. \\
+Quella che si viene a creare è quindi una rete di dipendenze come mostrato di seguito:
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.35]{COPS/COPS4.png}
 \end{figure}
 La proliferazione di metadati riduce l'efficienza: possiamo affidarci
-alle 'nearest dependencies'!
+alle ``nearest dependencies''!
+\end{frame}
+
+\begin{frame}
+\frametitle{Scritture}
+Tutte le scritture in COPS prima vengono eseguite sul cluster locale, per poi propagarsi
+in maniera asincrona sui cluster remoti. Il key-value store esporta una singola API
+di \texttt{put\char`_after} che ci consente di eseguire entrambe le operazioni in un 
+colpo solo e ci assicura che il valore è committato ad ogni cluster solo dopo che tutte
+le sue dipendenze sono state scritte (su quello specifico cluster). Quest'ultimo controllo
+viene fatto mediante una primitiva di \texttt{dep\char`_check}.
+\end{frame}
+
+\begin{frame}
+\frametitle{Gestione dei conflitti}
+\begin{block}{Conflict handling}
+COPS può gestire conflitti in diversi modi a seconda dell'implementazione:
+	\begin{itemize}
+		\item<1-> Last-writer-win-rule \\
+				  (detta Thomas Write rule e basata su Timestamp);
+				  % La regola dice che se TS(T) < WTS(O), la corrente azione di scrittura è stata resa 
+				  % obsoleta dalla più recente operazione di scrittura di O, che segue la scrittura corrente 
+				  % basandosi sull'ordinamento del Timestamp.
+		\item<1-> Marking dei conflitti e risoluzione con altri mezzi.
+	\end{itemize}
+\end{block}
+\begin{block}{Lamport Timestamp}
+Vengono usati i Lamport Timestamp per assegnare un numero di versione univoco a ogni aggiornamento.
+Il nodo setta la parte alta dei bit del numero di versione pari al suo Lamport clock, mentre la
+parte bassa viene posta pari all'identificativo univoco del nodo. \\
+\end{block}
+Non vengono usati i Vector Clock come invece avviene in Amazon Dynamo perché
+si ritiene che in un sistema troppo grande potrebbero andare fuori controllo.
 \end{frame}
 
 \begin{frame}
@@ -187,6 +235,7 @@ Presentiamo un esempio di pseudocodice della \texttt{get\char`_trans}:
 
 \begin{frame}
 \frametitle{COPS: conclusioni}
+Il conclusione, COPS è un sistema che offre le seguenti caratteristiche:
 \begin{itemize}
 	\item<1-> Serve le operazioni localmente, replica in background \\
 			  (always on)
