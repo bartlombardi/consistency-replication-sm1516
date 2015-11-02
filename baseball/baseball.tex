@@ -50,7 +50,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
   \item \textbf{Eventual Consistency}: è la più debole delle altre, poiché permette di avere come valore di ritorno il più grande insieme di possibilità.
   \item \textbf{Consistent Prefix}: osserva l'ordine di sequenza delle scritture e ritorna l'ultima.
   \item \textbf{Bounded Staleness}: assicura che il risultato della lettura non sia scaduto, ovvero per ogni dato definisce un periodo di tempo $T$ 'staleness' e garantisce che l'operazione di lettura ritorni un qualsiasi valore scritto fra $T$ e il più recente.
-  \item \textbf{Monotonic Reads}: si possono leggere dati stantii, ovvero se il client effettua la lettura di un dato ed ottiene un certo valore $X$ è garantito che se rilegge non riceverà un dato che è stato scritto prima di $X$. 
+  \item \textbf{Monotonic Reads}: si possono leggere dati vecchi, ovvero se il client effettua la lettura di un dato ed ottiene un certo valore $X$ è garantito che se rilegge non riceverà un dato che è stato scritto prima di $X$. 
   \item \textbf{Read My Writes}: gli effetti di tutte le scritture che sono state fatte da un client, sono visibili al client successivo che legge quei dati.
 \end{enumerate}
 \end{frame}
@@ -94,7 +94,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
 
 \begin{frame}
  \frametitle{Soggetti del baseball}
- Nel gioco del baseball vi sono differenti soggetti con diversi ruoli, ognuno di essi necessita di un tipo di consistenza:
+ Nel gioco del baseball vi sono differenti soggetti con diversi ruoli, ognuno di essi necessita di un modello di consistenza:\\
  \begin{itemize}
    \item Segnapunti
    \item Arbitro
@@ -112,7 +112,10 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
     Write ("visitors", score + 1);
   \end{lstlisting}
   \begin{block}{Consistenza desiderata}
-    Read My Writes
+    \begin{itemize}
+      \item Strong consistency è superflua, il segnapunti è l'unico ad effettuare delle write.
+      \item Read My Writes è sufficiente.
+    \end{itemize}     
   \end{block}
 \end{frame}
 
@@ -126,7 +129,7 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
         end game;
   \end{lstlisting}
  \begin{block}{Consistenza desiderata}
-   Strong Consistency
+   L'arbitro necessita della Strong Consistency per determinare la squadra vincitrice e concludere la partita.
  \end{block}
 \end{frame}
 
@@ -142,9 +145,10 @@ Attualmente i cloud storage systems offrono principalmente la strong consistency
   \end{lstlisting}
   \begin{block}{Consistenza desiderata}
     \begin{itemize}
-      \item Consistent Prefix
-      \item Monotonic Reads
-      \item Bounded Staleness
+      \item Consistent Prefix non è sufficiente, la lettura successiva può avvenire su un nodo non sincronizzato.
+      Esempio: dopo aver letto lo score 2-5  è possibile leggere il punteggio 1-3.
+      \item Monotonic Reads 
+      \item Bounded Staleness è necessaria 
     \end{itemize}
   \end{block}
 \end{frame}
