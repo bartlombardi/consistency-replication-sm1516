@@ -3,25 +3,24 @@
 \begin{frame}
  \frametitle{Replica di dati nel cloud}
  \begin{itemize}
-   \item Sistemi di cloud storage replicano i dati su più macchine per la tolleranza ai guasti e per beneficiare delle prestazioni.
-   \item Sempre più spesso utilizzano la geo-replication per sopravvivere ad una eventuale perdita di datacenter.
-   \item I datacenter vengono distribuita a livello globale in più continenti per garantire che i dati siano vicini a una base di client.
+   \item Sistemi di cloud storage replicano i dati su più macchine per la resistenza ai guasti e performance.
+   \item Si utilizza la geo-replication per resistere ad una eventuale perdita di datacenter interi.
+   \item I datacenter vengono distribuita a livello globale in più continenti per garantire che i dati siano vicini a più basi di client.
  \end{itemize}
   
 \end{frame}
 
 \begin{frame}
  \frametitle{Sistemi di storage popolari}
-Attualmente i cloud storage systems offrono principalmente la strong consistency e eventual consistency:
+Attualmente i cloud storage systems scelgono fra la strong consistency e eventual consistency:
  \begin{itemize}
    \item Amazon S3 – eventual consistency
    \item Amazon Simple DB – eventual o strong
    \item Google App Engine – strong o eventual
    \item Yahoo! PNUTS – eventual o strong
    \item Windows Azure Storage – strong o eventual
-   \item Cassandra – eventual o strong
  \end{itemize}
-%Amazon ha spinto sulla eventual consistency, ma le offerte sono per la strong consistency, un opzione aggiuntiva per servizi, come SimpleDB e DynamoDB.
+%Amazon ha spinto sulla eventual consistency, ma offre la strong consistency come opzione per servizi, come SimpleDB e DynamoDB.
 %Google App Engine ha cominciato offrendo solo strong consistency, ma dopo ha aggiunto delle opzioni di lettura, weakly consistent data per quelle applicazioni che richiedono maggiori performance.
 %Yahoo!’s PNUTS system, la tencologia di base per molti dei servizi offerti da Yahoo, offre sia eventual consistency e strong consistency.
 %Windows Azure fornisce solo la strong consistency, anche se utilizza l'eventual consistency per i dati geo-replicati.
