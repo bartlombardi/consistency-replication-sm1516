@@ -31,11 +31,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
 	\begin{definizione}
 	 Il \alert{teorema CAP} afferma che è impossibile per un sistema informatico distribuito fornire simultaneamente tutte e tre le seguenti garanzie:
 	\begin{itemize}
-		\item Coerenza\\
+		\item \textbf{Coerenza}\\
 		tutti i nodi vedono gli stessi dati nello stesso momento
-		\item Disponibilità\\
+		\item \textbf{Disponibilità}\\
 	    la garanzia che ogni richiesta riceva una risposta su ciò che sia riuscito o fallito
-		\item Tolleranza di partizione\\
+		\item \textbf{Tolleranza di partizione}\\
 		il sistema continua a funzionare nonostante arbitrarie perdite di messaggi
 	\end{itemize}
 	Secondo il teorema, un sistema distribuito è in grado di soddisfare al massimo due di queste garanzie allo stesso tempo, ma non tutte e tre
@@ -43,23 +43,33 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
 \end{frame}
 
 \begin{frame}
-\frametitle{Alcuni tipi di consistenza}
-\begin{enumerate}
+\frametitle{Alcuni tipi di coerenza}
+\begin{itemize}
   \item \textbf{Strong Consistency}: garantisce che l'operazione di lettura ritorni il valore dell'ultima scrittura.
   \item \textbf{Eventual Consistency}: è la più debole delle altre, poiché permette di avere come valore di ritorno il più grande insieme di possibilità.
   \item \textbf{Consistent Prefix}: osserva l'ordine di sequenza delle scritture e ritorna l'ultima.
   \item \textbf{Bounded Staleness}: assicura che il risultato della lettura non sia scaduto, ovvero per ogni dato definisce un periodo di tempo $T$ 'staleness' e garantisce che l'operazione di lettura ritorni un qualsiasi valore scritto fra $T$ e il più recente.
   \item \textbf{Monotonic Reads}: si possono leggere dati vecchi, ovvero se il client effettua la lettura di un dato ed ottiene un certo valore $X$ è garantito che se rilegge non riceverà un dato che è stato scritto prima di $X$. 
   \item \textbf{Read My Writes}: gli effetti di tutte le scritture che sono state fatte da un client, sono visibili al client successivo che legge quei dati.
-\end{enumerate}
+\end{itemize}
 \end{frame}
 
 \begin{frame}
-\frametitle{Consistenze a confronto}
-	\begin{figure}
-		\includegraphics[scale=0.5]{baseball/tab2.jpg}
-	\end{figure}
+\frametitle{Coerenze a confronto}
+  \begin{center}
+  \begin{tabular}{l*{6}{c}r}
+\textbf{Guarantee}     & \textbf{Consistency} & \textbf{Performance} & \textbf{Availability} \\
+\hline
+\textbf{Strong Consistency}     & excellent & poor & poor   \\
+\textbf{Eventual Consistency}   & poor & excellent & excellent \\
+\textbf{Consistent Prefix}      & okay & good & excellent\\
+\textbf{Bounded Staleness}      & good & okay & poor     \\
+\textbf{Monotonic Reads}        & okay & good & good     \\
+\textbf{Read My Writes}         & okay & okay & okay     \\
+\end{tabular}
+  \end{center}
 \end{frame}
+
 
 \begin{frame}[fragile]
 \frametitle{Il baseball in pseudocodice}
@@ -93,7 +103,7 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
 
 \begin{frame}
  \frametitle{Soggetti del baseball}
- Nel gioco del baseball vi sono differenti soggetti con diversi ruoli, ognuno di essi necessita di un modello di consistenza:\\
+ Nel gioco del baseball vi sono differenti soggetti con diversi ruoli, ognuno di essi necessita di un modello di coerenza:\\
  \begin{itemize}
    \item Segnapunti
    \item Arbitro
@@ -110,10 +120,10 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     score = Read ("visitors");
     Write ("visitors", score + 1);
   \end{lstlisting}
-  \begin{block}{Consistenza desiderata}
+  \begin{block}{Coerenza desiderata}
     \begin{itemize}
-      \item Strong consistency è superflua, il segnapunti è l'unico ad effettuare delle write.
-      \item Read My Writes è sufficiente.
+      \item \alert{Strong consistency} è superflua, il segnapunti è l'unico ad effettuare delle write.
+      \item \alert{Read My Writes} è sufficiente.
     \end{itemize}     
   \end{block}
 \end{frame}
@@ -127,8 +137,8 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
       if vScore < hScore
         end game;
   \end{lstlisting}
- \begin{block}{Consistenza desiderata}
-   L'arbitro necessita della Strong Consistency per determinare la squadra vincitrice e concludere la partita.
+ \begin{block}{Coerenza desiderata}
+   L'arbitro necessita della \alert{Strong Consistency} per determinare la squadra vincitrice e concludere la partita.
  \end{block}
 \end{frame}
 
@@ -142,12 +152,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
         sleep (30 minutes);
     }
   \end{lstlisting}
-  \begin{block}{Consistenza desiderata}
+  \begin{block}{Coerenza desiderata}
     \begin{itemize}
-      \item Consistent Prefix non è sufficiente, la lettura successiva può avvenire su un nodo non sincronizzato.
-      Esempio: dopo aver letto lo score 2-5  è possibile leggere il punteggio 1-3.
-      \item Monotonic Reads 
-      \item Bounded Staleness è necessaria 
+      \item \alert{Consistent Prefix} non è sufficiente, la lettura successiva può avvenire su un nodo non sincronizzato.\\
+      Esempio: dopo aver letto lo score 2-5 è possibile leggere il punteggio 1-3.
+      \item \alert{Monotonic Reads} o \alert{Bounded Staleness} è necessaria. 
     \end{itemize}
   \end{block}
 \end{frame}
@@ -164,8 +173,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     hScore = Read ("home");
     write article;
   \end{lstlisting}
-  \begin{block}{Consistenza desiderata}
-    
+  \begin{block}{Coerenza desiderata}
+   \begin{itemize}
+    \item \alert{Eventual Consistency} ?% è probabile che ritorni il risultato corretto dopo un ora dalla partita
+    \item \alert{Bounded Staleness} garantisce la sicurezza sul risultato finale.
+   \end{itemize}  
   \end{block}
 \end{frame}
 
@@ -177,8 +189,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     stat = Read ("season-runs");
     Write ("season-runs", stat + score);
   \end{lstlisting}
-  \begin{block}{Consistenza desiderata}
-   
+  \begin{block}{Coerenza desiderata}
+     \begin{enumerate}
+       \item \alert{Strong Consistency} per la lettura dello score corrente.
+       \item \alert{Read My Writes}
+     \end{enumerate}
    \end{block}
 \end{frame}
 
@@ -191,7 +206,7 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
         sleep (1 day);
     }
   \end{lstlisting}
-  \begin{block}{Consistenza desiderata}
-   
+  \begin{block}{Coerenza desiderata}
+    \alert{Eventual Consistency} è sufficiente, le statistiche vengono aggiornate ogni giorno
   \end{block}
 \end{frame}
