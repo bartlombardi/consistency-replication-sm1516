@@ -57,7 +57,7 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
 \begin{frame}
 \frametitle{Coerenze a confronto}
   \begin{center}
-  \begin{tabular}{l*{6}{c}r}
+  \begin{tabular}{l*{3}{c}r}
 \textbf{Guarantee}     & \textbf{Consistency} & \textbf{Performance} & \textbf{Availability} \\
 \hline
 \textbf{Strong Consistency}     & excellent & poor & poor   \\
@@ -94,11 +94,37 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
 \end{frame}
 
 \begin{frame}
-\frametitle{Un esempio}
-	\begin{figure}
-		\includegraphics[scale=0.4]{baseball/tab3a.jpg}\\
-		\includegraphics[scale=0.4]{baseball/tab3.jpg}
-	\end{figure}
+\frametitle{Un esempio}  
+\begin{center}
+ \begin{tabular}{l*{10}{c}r}
+  \textbf{Team}              & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{RUNS} \\
+ \hline
+  \textbf{Visitors}     & 0 & 0 & 1 & 0 & 1 & 0 & 0 &  &  & 2 \\
+  \textbf{Home}         & 1 & 0 & 1 & 1 & 0 & 2 &   &  &  & 5 \\
+ \end{tabular}
+\end{center}
+
+\begin{center}
+ \begin{tabular}{ |l|l| }
+  \hline
+  \multicolumn{2}{|c|}{Letture di punteggi possibili per ogni tipo di coerenza} \\
+  \hline
+  \textbf{Strong Consistency}   & 2-5 \\
+  \hline
+  \textbf{Eventual Consistency} & 0-0, 0-1, 0-2, 0-3, 0-4, 0-5, 1-0, 1-1, 1-2,\\
+                                & 1-3, 1-4, 1-5, 2-0, 2-1, 2-2, 2-3, 2-4, 2-5 \\
+  \hline
+  \textbf{Consistent Prefix}    & 0-0, 0-1, 1-1, 1-2, 1-3, 2-3, 2-4, 2-5 \\
+  \hline
+  \textbf{Bounded Staleness}    & un inning indietro: 2-3, 2-4, 2-5 \\
+  \hline  
+  \textbf{Monotonic Reads}      & dopo aver letto 1-3: 1-3, 1-4, 1-5, 2-3, 2-4, 2-5 \\
+  \hline  
+  \textbf{Read My Writes}       & per chi scrive: 2-5 \\
+                                & altri: eventual consistency \\
+  \hline
+ \end{tabular}
+\end{center}
 \end{frame}
 
 \begin{frame}
