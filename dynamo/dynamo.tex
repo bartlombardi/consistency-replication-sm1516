@@ -52,7 +52,6 @@
   \centering
   \includegraphics[scale=0.60]{dynamo/consistent-hashing-ring.png}
   \end{figure}
-  
 \end{frame}
 
 
@@ -60,7 +59,7 @@
   \frametitle{Partizionamento (II)}
   Dynamo propone una variante del consistent hashing: \\
   Si utilizzano i \alert{nodi virtuali} (tokens).
-  \begin{block}{Vantaggi del consistent hashing di Dynamo:}
+  \begin{block}{Vantaggi:}
   \begin{itemize}
   \item Dati distribuiti uniformemente.
   \item Aggiungere o togliere nodi influenza solo il ``successore''.
@@ -80,35 +79,49 @@
   \item I nodi virtuali sono saltati lungo l'anello.
   \item L'aggiornamente delle repliche è \alert{asincrono}.
   \end{itemize}
+  \begin{figure}
+  \centering
+  \includegraphics[scale=0.3]{dynamo/replication.png}
+  \end{figure}  
 \end{frame}
 
 
 \begin{frame}
   \frametitle{Versionamento (I)}
-  Ogni modifica viene trattata dal sistema come un nuovo oggetto.
-  
-  Si utilizzano i \alert{vector clock} ($\vclock$) per tenere traccia delle versioni:
+  \begin{itemize}
+  \item Ogni modifica viene trattata dal sistema come un nuovo oggetto.
+  \item Si utilizzano i \alert{vector clock} ($\vclock$) per tenere traccia delle versioni:
+  \end{itemize}
+  \centering
+    \[
+    \big[<\mathrm{nodo}, \mathrm{counter}> <n_2, c_2> ... <n_m, c_m> \big]
+    \]
 
   \begin{definizione}
     Siano $x$ e $y$ due versioni del medesimo oggetto, denotiamo con $\vclock(x)_z$ il vector clock di $x$ relativo al nodo $z$.
     \begin{multline*}
     \vclock(x) < \vclock(y) \iff \\
-      \forall z \mathrel{:} \bigg( \vclock(x)_z \leq \vclock(y)_z \land \exists z' \mathrel{:} \vclock(x)_{z'} < \vclock(y)_{z'} \bigg) 
+      \big( \forall z \mathrel{:} \vclock(x)_z \leq \vclock(y)_z \big) \land \big( \exists z' \mathrel{:} \vclock(x)_{z'} < \vclock(y)_{z'} \big) 
     \end{multline*}
   \end{definizione}
-
-  Si ottiene un ordinamento parziale sulle versioni:
-  \begin{itemize}
-  \item Se $\vclock(x) < \vclock(y)$ allora la versione $y$ può sovvrascrivere $x$.
-  \item Altrimenti abbiamo un branching delle versioni che il sistema non può riconciliare autonomamente.
-  \end{itemize}
-
 \end{frame}
 
 
 \begin{frame}{Versionamento (II)}
+   Si ottiene un ordinamento parziale sulle versioni:
+  \begin{itemize}
+  \item Se $\vclock(x) < \vclock(y)$ allora la versione $y$ può sovrascrivere $x$.
+  \item Altrimenti abbiamo un branching delle versioni che il sistema non può riconciliare autonomamente.
+  \end{itemize}
   Un esempio:
+  \begin{figure}
+  \centering
+  \includegraphics[scale=0.3]{dynamo/versioning.png}
+  \end{figure}  
+\end{frame}
 
+
+\begin{frame}{Versionamento (III)}
   \begin{block}{Pro dell'uso dei vector clock:}
     \begin{itemize}
     \item Rispetto all'utilizzo di un timestamp logico si ottiene un ordinamento parziale tra le versioni.
@@ -123,6 +136,7 @@
     \end{itemize}
   \end{block}
 \end{frame}
+
 
 \begin{frame}
   \frametitle{Garantire la Consistenza}
@@ -145,13 +159,21 @@
 
 \begin{frame}
   \frametitle{Operazione \texttt{get}}
-  $N = 3, W = 2, R = 2.$
+  $N = 4, W = 2, R = 3$
+  \begin{figure}
+  \centering
+  \includegraphics[scale=0.38]{dynamo/get.png}
+  \end{figure}
 \end{frame}
 
 
 \begin{frame}
   \frametitle{Operazione \texttt{put}}
-  $N = 3, W = 2, R = 2.$
+  $N = 4, W = 2, R = 3$
+  \begin{figure}
+  \centering
+  \includegraphics[scale=0.38]{dynamo/put.png}
+  \end{figure}
 \end{frame}
 
 
@@ -178,7 +200,7 @@
 
 
 \begin{frame}
-  \frametitle{Sloppy Quorum e Gestione Fallimenti}
+  \frametitle{Sloppy Quorum}
   \begin{block}{Problema:}
     Bastano pochi fallimenti nella ``top $N$'' della preference list per impedire il raggiungimento del quorum.    
   \end{block}
@@ -193,7 +215,7 @@
 
 
 \begin{frame}
-  \frametitle{Gestione Fallimenti e Sincronia Repliche}
+  \frametitle{Gestione Fallimenti e Sincronia Repliche (I)}
   \begin{block}{Hinted handoff}
   \begin{itemize}
   \item La replica spedita al nodo ``supplente'' contiene un \alert{hint}.
@@ -204,16 +226,70 @@
   \end{block}
 \end{frame}
 
+\begin{frame}
+  \frametitle{Gestione Fallimenti e Sincronia Repliche (II)}
+    In caso di fallimento di un semplente è necessario un mezzo per stabilire se due repliche sono sincronizzare:
+    \begin{block}{Merkle tree:}
+    \begin{columns}
+    \begin{column}{0.4\textwidth}
+      \begin{itemize}
+      \item I \alert{Merkle tree} sono alberi in cui ogni nodo padre è l'hash della somma dei figli.
+      \end{itemize}
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        \begin{figure}
+        \centering
+        \includegraphics[scale=0.07]{dynamo/merkle-tree.png}
+        \end{figure}
+      \end{column}
+    \end{columns}
+    \begin{itemize}
+      \item Consentono di identificare efficientemente differenze tra due alberi.
+      \item Ogni nodo memorizza un Merkle tree per ogni intervallo che memorizza.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
 
 \begin{frame}
   \frametitle{Membership e Rilevamento Fallimenti}
+  \begin{block}{Gestire l'appartenenza al sistema (membership):}
+  \begin{itemize}
+  \item Non è presente una vista centralizzata dei membri appartenenti al sistema.
+  \item Le informazioni sui membri sono scambiate mediante un protocollo \alert{gossip based}.
+  \item Presenza di nodi \alert{seed} individuati ``staticamente'', notificati immediatamente dei cambiamenti nel sistema.
+  \end{itemize}
+  \end{block}
+  \begin{block}{Rilevamento fallimenti:}
+  \begin{itemize}
+  \item Il concetto di fallimento è locale.
+    %per A il nodo B è fallito se non risponde, indipendentemente dalle risposte che può dare agli altri nodi.
+  \item Dunque non c'è una visione unica e consistente dei nodi falliti, necessario un monitoring periodico.
+  \end{itemize}
+  \end{block}
+  %$\longrightarrow$ Entrambe queste tecniche portano alta scalabilità.
 \end{frame}
+
+
+\begin{frame}
+  \frametitle{Dynamo nella Pratica}
+\end{frame}
+
 
 \begin{frame}
   \frametitle{Concludendo su Dynamo}
   \begin{block}{Vantaggi di Dynamo:}
+    \begin{itemize}
+    \item Scalabilità.
+    \item Riconciliazione versioni gestita dal client.
+    \item Consistenza, availability, latency, regolabili appositamente per un'istanza.
+    \end{itemize}
   \end{block}
   \begin{block}{Svantaggi:}
+  \begin{itemize}
+  \item La riconciliazione a carico del client complica il codice delle applicazioni.
+  \item Modificare dinamicamente i parametri $N, W, R$ per adattarsi alla situazione del sistema alleggerendo il traffico di richieste interne. 
+  \end{itemize}
   \end{block}
 \end{frame}
 
