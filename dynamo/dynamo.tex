@@ -25,19 +25,29 @@
 \begin{frame}
   \frametitle{Architettura del Sistema}
   Scomponiamo il sistema in base alle tecniche utilizzate:
-  \begin{center}
-  \begin{tabular}{l | l}
-    \textbf{Partizionamento e replicazione} & Consistent hashing \\
-    \hline
-    \textbf{Versionamento}                  & Vector clock \\
-    \hline
-    \textbf{Consistenza operazioni}         & Quorum likeness \\
-    \hline
-    \textbf{Gestione fallimenti}            & Sloppy quorum, \\
-                                            & hinted handoff, \\
-                                            & Merkle tree 
+  \begin{table}[ht]
+  \begin{center} 
+  \begin{tabular}{| l | l |}
+  \hline
+  \rowcolor{lightgray} 
+  \textbf{Partizionamento e replicazione} & Consistent hashing \\
+  \hline
+  \textbf{Versionamento}                  & Vector clock \\
+  \hline
+  \rowcolor{lightgray}
+  \textbf{Coerenza operazioni}            & Quorum likeness \\
+  \hline
+  \multirow{3}{*}{\textbf{Gestione fallimenti}}
+                                          & Sloppy quorum, \\
+                                          & hinted handoff, \\
+                                          & Merkle tree \\ 
+  \hline
+  \rowcolor{lightgray}
+  \textbf{Membership e rilevamento fallimenti}  & Gossip-based protocol, \\ 
+  \hline
   \end{tabular}
   \end{center}
+  \end{table}
 \end{frame}
 
 
@@ -139,7 +149,7 @@
 
 
 \begin{frame}
-  \frametitle{Garantire la Consistenza}
+  \frametitle{Garantire la Coerenza}
   \begin{itemize}
   \item Operazione di \texttt{get} e \texttt{put}:
     \begin{itemize}
@@ -148,7 +158,7 @@
     \end{itemize}
   \end{itemize}
   \begin{itemize}
-  \item La consistenza è ottenuta mediante la tecnica del \alert{quorum}:
+  \item La coerenza è ottenuta mediante la tecnica del \alert{quorum}:
     \begin{itemize}
     \item $W$: ($W \leq N$) numero di nodi che contribuiscono alla scrittura.
     \item $R$: ($R \leq N$) numero di nodi che contribuiscono alla lettura.
@@ -210,7 +220,7 @@
   \item La replica che normalmente risiederebbe sul nodo fallito viene traferita al nodo supplente.
   \end{itemize}
   \end{block}
-  $\longrightarrow$ Quando i nodi falliti ritornano in servizio nasce un problema di inconsistenza. 
+  $\longrightarrow$ Quando i nodi falliti ritornano in servizio nasce un problema di incoerenza. 
 \end{frame}
 
 
@@ -239,7 +249,7 @@
       \begin{column}{0.5\textwidth}
         \begin{figure}
         \centering
-        \includegraphics[scale=0.07]{dynamo/merkle-tree.png}
+        \includegraphics[scale=0.4]{dynamo/merkle-tree.png}
         \end{figure}
       \end{column}
     \end{columns}
@@ -264,7 +274,7 @@
   \begin{itemize}
   \item Il concetto di fallimento è locale.
     %per A il nodo B è fallito se non risponde, indipendentemente dalle risposte che può dare agli altri nodi.
-  \item Dunque non c'è una visione unica e consistente dei nodi falliti, necessario un monitoring periodico.
+  \item Dunque non c'è una visione unica e coerente dei nodi falliti, necessario un monitoring periodico.
   \end{itemize}
   \end{block}
   %$\longrightarrow$ Entrambe queste tecniche portano alta scalabilità.
@@ -282,7 +292,7 @@
     \begin{itemize}
     \item Scalabilità.
     \item Riconciliazione versioni gestita dal client.
-    \item Consistenza, availability, latency, regolabili appositamente per un'istanza.
+    \item Coerenza, availability, latency, regolabili appositamente per un'istanza.
     \end{itemize}
   \end{block}
   \begin{block}{Svantaggi:}
