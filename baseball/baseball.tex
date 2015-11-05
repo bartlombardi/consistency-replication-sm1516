@@ -146,9 +146,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     score = Read ("visitors");
     Write ("visitors", score + 1);
   \end{lstlisting}
+  \pause
   \begin{block}{Coerenza desiderata}
     \begin{itemize}
       \item \alert{Strong consistency} è superflua, il segnapunti è l'unico ad effettuare delle write.
+      \pause
       \item \alert{Read My Writes} è sufficiente.
     \end{itemize}     
   \end{block}
@@ -163,6 +165,7 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
       if vScore < hScore
         end game;
   \end{lstlisting}
+  \pause
  \begin{block}{Coerenza desiderata}
    L'arbitro necessita della \alert{Strong Consistency} per determinare la squadra vincitrice e concludere la partita.
  \end{block}
@@ -178,10 +181,12 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
         sleep (30 minutes);
     }
   \end{lstlisting}
+  \pause
   \begin{block}{Coerenza desiderata}
     \begin{itemize}
       \item \alert{Consistent Prefix} non è sufficiente, la lettura successiva può avvenire su un nodo non sincronizzato.\\
       Esempio: dopo aver letto lo score 2-5 è possibile leggere il punteggio 1-3.
+      \pause
       \item \alert{Monotonic Reads} o \alert{Bounded Staleness} è necessaria. 
     \end{itemize}
   \end{block}
@@ -199,9 +204,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     hScore = Read ("home");
     write article;
   \end{lstlisting}
+  \pause
   \begin{block}{Coerenza desiderata}
    \begin{itemize}
     \item \alert{Eventual Consistency} ?% è probabile che ritorni il risultato corretto dopo un ora dalla partita
+    \pause
     \item \alert{Bounded Staleness} garantisce la sicurezza sul risultato finale.
    \end{itemize}  
   \end{block}
@@ -215,9 +222,11 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
     stat = Read ("season-runs");
     Write ("season-runs", stat + score);
   \end{lstlisting}
+  \pause
   \begin{block}{Coerenza desiderata}
      \begin{enumerate}
        \item \alert{Strong Consistency} per la lettura dello score corrente.
+       \pause
        \item \alert{Read My Writes}
      \end{enumerate}
    \end{block}
@@ -232,6 +241,7 @@ Attualmente i cloud storage systems scelgono fra la strong consistency e eventua
         sleep (1 day);
     }
   \end{lstlisting}
+  \pause
   \begin{block}{Coerenza desiderata}
     \alert{Eventual Consistency} è sufficiente, le statistiche vengono aggiornate ogni giorno
   \end{block}
