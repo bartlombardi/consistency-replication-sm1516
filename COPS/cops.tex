@@ -1,23 +1,23 @@
 \section{COPS}
 \begin{frame}
 \frametitle{COPS}
-\begin{block}{COPS}
-Presentiamo, in questa sezione, il design di COPS (Cluster of Order-Preserving Servers),
+\begin{block}{Cos'è COPS}
+COPS (Cluster of Order-Preserving Servers) è, come Dynamo,
 un key-value store distribuito in un'ampia area che implementa un modello di coerenza
 denomitato \textit{causal+}.
 \end{block}
-L'approccio principale su cui si base COPS consiste nel tracciare e controllare esplicitamente
-le dipendenze causali fra le chiavi nel cluster locale prima di esporre una qualunque scrittura.
-\begin{block}{COPS-GT}
-Introdurremo poi in COPS-GT, evoluzione di COPS, le \texttt{get transaction}, che permettono
-di ottenere una visione consistente di un insieme di chiavi.
+%L'approccio principale su cui si basa COPS consiste nel tracciare e controllare esplicitamente
+%le dipendenze causali fra le chiavi nel cluster locale prima di esporre una qualunque scrittura.
+\begin{block}{Cos'è COPS-GT}
+COPS-GT è un'evoluzione di COPS che implementa le cosiddette le \texttt{get transaction},
+capaci di ottenere una visione consistente di un insieme di chiavi.
 \end{block}
 \end{frame}
 
 \begin{frame}
-\frametitle{Sistema ALPS}
+\frametitle{Obiettivi di COPS}
 	\begin{definizione}
-	Un \textbf{sistema ALPS} è un sistema caratterizzato da 4 proprietà:
+	Un \alert{sistema ALPS} è un sistema caratterizzato da 4 proprietà:
 	\begin{enumerate}
 		\item<1-> Availability \\
 				  Ogni richiesta riceve una risposta su ciò che è riuscito o fallito.
@@ -34,7 +34,7 @@ di ottenere una visione consistente di un insieme di chiavi.
 \end{frame}
 
 \begin{frame}
-\frametitle{Struttura di COPS}
+\frametitle{Architettura del sistema}
 	\begin{figure}
 		\centering
 		\includegraphics[scale=0.45]{COPS/COPS1.png}
@@ -44,8 +44,8 @@ di ottenere una visione consistente di un insieme di chiavi.
 \begin{frame}
 \frametitle{Potenziale di causalità}
 	\begin{definizione}
-	Definiamo il \textbf{potenziale di causalità} fra operazioni (e lo denotiamo con $\rightsquigarrow$)
-	mediante tre regole:
+	Definiamo il \alert{potenziale di causalità} fra operazioni (e lo denotiamo con 
+	il simbolo $\rightsquigarrow$) come una relazione che soddisfa le seguenti tre regole:
 	\begin{enumerate}
 		\item<1-> \textbf{Execution thread.}
 				  Se $a$ e $b$ sono due operazioni in un singolo thread di esecuzione
@@ -71,7 +71,7 @@ di ottenere una visione consistente di un insieme di chiavi.
 \begin{frame}
 \frametitle{Casual+ Consistency}
 \begin{definizione}
-Definiamo la \textbf{Causal+ Consistency} implementata da COPS come una combinazione di due proprietà:
+Definiamo la \alert{Causal+ Consistency} implementata da COPS come una combinazione di due proprietà:
 	\begin{itemize}
 		\item<1-> Causal Consistency \\
 				  I valori restituiti da un'operazione di \texttt{get} da una replica sono 
@@ -84,7 +84,7 @@ Definiamo la \textbf{Causal+ Consistency} implementata da COPS come una combinaz
 \end{definizione}
 
 \begin{definizione}
-Si dice che due operazioni $a$ e $b$ sono in conflitto se sono entrambe
+Si dice che due operazioni $a$ e $b$ sono \alert{in conflitto} se sono entrambe
 due operazione di \texttt{put} ``simultanee'' sulla stessa chiave.
 \end{definizione}
 \end{frame}
@@ -93,14 +93,14 @@ due operazione di \texttt{put} ``simultanee'' sulla stessa chiave.
 %	2) Permettono a due o più repliche di divergere per sempre!
 
 \begin{frame}
-\frametitle{Consistenze a confronto}
-\begin{block}{Consistenza sequenziale}
+\frametitle{Coerenze a confronto}
+\begin{block}{Sequential consistency}
 Il risultato di qualunque operazione è uguale a quello ottenuto se le operazioni
 di read e di write da parte di tutti i processi sullo archivio di dati fossero eseguite:
 	\begin{enumerate}
 		\item in un qualche ordine sequenziale;
 		\item le operazioni di ogni singolo processo appaiono comunque in questa sequenza
-			  nell'ordine specificato dal programma
+			  nell'ordine specificato dal programma.
 	\end{enumerate}
 \end{block}	
 	\begin{figure}
@@ -108,47 +108,54 @@ di read e di write da parte di tutti i processi sullo archivio di dati fossero e
 		\includegraphics[scale=0.35]{COPS/COPS6.png}
 	\end{figure}
 
-Se in Dynamo abbiamo una consistenza che può oscillare fra Strong, Weak, Eventual,
+Se in Dynamo abbiamo un livello di coerenza che può oscillare fra Strong ed Eventual,
 in COPS la definizione risulta più netta: si cerca di implementare il meglio che si può
-avere con le caratteristiche ALPS.
+avere con le caratteristiche ALPS!
 \end{frame}
 
 \begin{frame}
-\frametitle{Astrazioni di COPS}
+\frametitle{Astrazioni di COPS (I)}
 \begin{block}{Versione}
-Ci riferiamo a differenti valori di una data chiave come alla loro \textbf{versione}
+Ci riferiamo a differenti valori di una data chiave come alla loro \alert{versione}
 (e la indichiamo con $\text{key}_{version}$).
 \end{block}
-% Una volta che una data replica in COPS ritorna un certo valore di una data chiave,
-% siamo assicurati per Casual Consistency + che i successivi valori richiesti a quella
-% replica di quella data chiave saranno quello ottenuto o una sua versione successiva,
-% mai precedente (PROPRIETA' DI PROGRESSIONE)
-\begin{block}{Dipendenze}
-Diciamo che $y_i$ \textbf{dipende da} $x_i$ se e solo se \texttt{put}$(x_i)
-\rightsquigarrow$ \texttt{put}$(y_i)$.
-\end{block}
+Una volta che una data replica in COPS ritorna un certo valore di una data chiave,
+siamo assicurati, per casual+ consistency, che i successivi valori richiesti a quella
+replica di quella data chiave saranno quello ottenuto o una sua versione successiva,
+mai precedente.\\
+\textit{(PROPRIETA' DI PROGRESSIONE)}
 \end{frame}
 
 \begin{frame}
-\frametitle{Panoramica di COPS}
+\frametitle{Astrazioni di COPS (II)}
+\begin{block}{Dipendenze}
+Diciamo che $y_i$ \alert{dipende da} $x_i$ se e solo se \texttt{put}$(x_i)
+\rightsquigarrow$ \texttt{put}$(y_i)$.
+\end{block}
+Tutte le operazioni che causalmente precedono una data operazione devono aver effetto
+prima che quella operazione avvenga.
+\end{frame}
+
+\begin{frame}
+\frametitle{Design di COPS (I)}
 \begin{block}{Struttura di COPS}
 COPS è formato da due componenti principali:
 \begin{itemize}
-	\item<1-> Key-value store
-	\item<1-> Client library
+	\item<1-> Key-value store \\
+			  Coppie <key, value> alle quali sono associati metadati (numero di versione
+			  e lista di dipendenze).
+	\item<1-> Client library \\
+			  Esporta due operazioni principali alle applicazioni: letture via \textit{get}
+			  e scritture via \textit{put}.
 \end{itemize}
 \end{block}
-\begin{figure}
-	\centering
-	\includegraphics[scale=0.35]{COPS/COPS7.png}
-\end{figure}
 \end{frame}
 % Ogni coppia key-value ha associati dei matadati: in COPS questi metadati sono il numero
 % di versione, mentre in COPS-GT sono il numero di versione e una lista delle dipendenze
 % (ossia una lista di chiavi con la corrispondente versione da cui si dipende)
 
 \begin{frame}
-\frametitle{Client library}
+\frametitle{Design di COPS (II)}
 L'interfaccia di COPS è composta da quattro operazioni (più una):
 \begin{itemize}
 	\item<1-> \textit{ctx\char`_id} $\leftarrow$ \texttt{createContext()}
@@ -159,29 +166,23 @@ L'interfaccia di COPS è composta da quattro operazioni (più una):
 \end{itemize}
 \begin{figure}
 	\centering
-	\includegraphics[scale=0.35]{COPS/COPS3.png}
+	\includegraphics[scale=0.35]{COPS/COPS7.png}
 \end{figure}
+%\begin{figure}
+%	\centering
+%	\includegraphics[scale=0.35]{COPS/COPS3.png}
+%\end{figure}
 \end{frame}
 % Il contesto mi permette di separare e riconoscere i diversi thread di esecuzione
 % Il contesto contiene anche le dipendenze fra le variabili
-
-%\begin{frame}
-%\frametitle{Il contesto}
-%La client library in COPS salva il contesto di un client in una tabella con entry
-%($key$,$version$). Quando viene fatta un'operazione di \texttt{get}, la corrispondente ($key$, $version$)
-%è aggiunta al contesto. Quando viene fatta un'operazione di \texttt{put}, viene controllato il
-%contesto per stabilire se le dipendenze sono soddisfatte, poi la library imposta
-%le dipendenze della \texttt{put} alla loro ultima versione e infine aggiunge la nuova entry ($key$, $version$)
-%al contesto.
-%\end{frame}
 
 \begin{frame}
 \frametitle{Dipendenze}
 %COPS codifica le dipendenze all'interno di metadati associati ad ogni versione
 %di una chiave. Di seguito presentiamo un esempio nel dettaglio:
-Il contesto permette di identificare il thread di esecuzione di un processo e
-di tracciare le dipendenze causali che si vengono a generare quando vengono
-eseguite operazioni di \texttt{put} e \texttt{get}. \\
+Il contesto viene usato internamente da COPS per tenere traccia delle dipendenze causali
+che si vengono a generare quando sono eseguite di volta in volta operazioni di \texttt{put}
+e di \texttt{get} da parte dei client. \\
 Quella che si viene a creare è quindi una rete di dipendenze come mostrato di seguito:
 \begin{figure}
 	\centering
@@ -193,12 +194,21 @@ alle ``nearest dependencies''!
 
 \begin{frame}
 \frametitle{Scritture}
-Tutte le scritture in COPS prima vengono eseguite sul cluster locale, per poi propagarsi
-in maniera asincrona sui cluster remoti. Il key-value store esporta una singola API
-di \texttt{put\char`_after} che ci consente di eseguire entrambe le operazioni in un 
-colpo solo e ci assicura che il valore è committato ad ogni cluster solo dopo che tutte
-le sue dipendenze sono state scritte (su quello specifico cluster). Quest'ultimo controllo
-viene fatto mediante una primitiva di \texttt{dep\char`_check}.
+Tutte le scritture in COPS:
+\begin{enumerate}
+	\item Vengono eseguite sul cluster locale;
+	\item Vengono propagate in maniera asincrona sui cluster remoti.
+\end{enumerate}
+Il sistema fornisce due API per gestire questo processo:
+\begin{itemize}
+	\item \texttt{put\char`_after} \\
+		  Consente di eseguire entrambe le operazioni di \emph{write} in un 
+		  colpo solo e ci assicura che il valore è committato ad ogni cluster solo dopo che tutte
+		  le sue dipendenze sono state scritte (su quello specifico cluster).
+	\item \texttt{dep\char`_check} \\
+		  Verifica che le dipendenze causali siano soddisfatte sul cluster locale, a seguito
+		  della ricezione di una \texttt{put\char`_after}.
+\end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -248,14 +258,18 @@ Presentiamo un esempio di pseudocodice della \texttt{get\char`_trans}:
 \end{frame}
 
 \begin{frame}
-\frametitle{COPS: conclusioni}
-Il conclusione, COPS è un sistema che offre le seguenti caratteristiche:
-\begin{itemize}
-	\item<1-> Serve le operazioni localmente, replica in background \\
-			  (always on)
-	\item<1-> Partiziona lo spazio delle chiavi in più nodi \\
-			  (scalabilità)
-	\item<1-> Controllo delle repliche con il tracciamento delle dipendenze \\
-			  (casual+ consistency)
-\end{itemize}
+\frametitle{Concludendo su COPS}
+\begin{block}{Vantaggi di COPS}
+COPS è un sistema che offre le seguenti caratteristiche:
+	\begin{itemize}
+		\item<1-> Serve le operazioni localmente, replica in background \\
+				  (always on)
+		\item<1-> Partiziona lo spazio delle chiavi in più nodi \\
+				  (scalabilità)
+		\item<1-> Controllo delle repliche con il tracciamento delle dipendenze \\
+				  (casual+ consistency)
+	\end{itemize}
+\end{block}
+\begin{block}{Svantaggi}
+\end{block}
 \end{frame}
