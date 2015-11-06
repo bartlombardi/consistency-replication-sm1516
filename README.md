@@ -1,4 +1,4 @@
-# Seminary of Consistency and Replication
-University of Bologna - Information Science
+# Seminary on Consistency and Replication
+University of Bologna - Computer Science
 
 Middleware Systems
