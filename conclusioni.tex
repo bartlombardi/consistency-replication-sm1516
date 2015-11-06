@@ -1,0 +1,14 @@
+\begin{frame}
+\frametitle{Conclusioni}
+In un sistema distribuito ci sono sempre due prospettive da tenere in considerazione:
+\begin{itemize}
+	\item Il provider \\
+		  Vede lo stato interno del sistema: la sua priorità è la sincronizzazione
+		  dei processi fra le repliche e l'ordine delle operazioni;
+	\item Un client del sistema di storage \\
+		  Il sistema è una black-box: la sua attenzione è rivolta alle garanzie che
+		  il sistema distribuito deve fornirgli come parte di un SLA.
+\end{itemize}
+Quindi, a seconda delle necessità dei diversi sistemi e della prospettiva client-centrica
+o data-centrica che scegliamo di adottare, possiamo implementare diversi livelli di coerenza.
+\end{frame}
