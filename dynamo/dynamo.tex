@@ -60,21 +60,35 @@
 \begin{frame}
   \frametitle{Partizionamento (I)}
   \begin{itemize}
-  \item Chiavi e valori sono visti come semplici array di byte.
-  \item Si usa MD5 a 128 bit per indicizzare le chiavi.
-  \item Tecnica del \alert{consistent hashing} per la distribuzione.
+  \item Si usa la tecnica del \alert{consistent hashing}.
   \end{itemize}
+  \begin{block}{Consistent hashing}
+    \begin{itemize}
+    \item Tabella hash richiusa ad anello.
+    \item Nodi posizionati casualmente sull'anello a formare intervalli.
+    \item Ogni nodo memorizza le chiavi nell'intervallo tra lui e il precedente.
+    \end{itemize}
+  \end{block}
   \begin{figure}
   \centering
-  \includegraphics[scale=0.60]{dynamo/consistent-hashing-ring.png}
+  \includegraphics[scale=0.25]{dynamo/consistent-hashing-ring.png}
   \end{figure}
 \end{frame}
 
 
 \begin{frame}
   \frametitle{Partizionamento (II)}
-  Dynamo propone una variante del consistent hashing: \\
-  Si utilizzano i \alert{nodi virtuali} (tokens).
+  \begin{columns}
+  \begin{column}{0.5\textwidth}
+  Dynamo propone una variante del consistent hashing, utilizzo di \alert{nodi virtuali} (tokens).
+  \end{column}
+  \begin{column}{0.5\textwidth}
+  \begin{figure}
+  \centering
+  \includegraphics[scale=0.23]{dynamo/virtual-node.png}
+  \end{figure}
+  \end{column}
+  \end{columns}
   \begin{block}{Vantaggi}
   \begin{itemize}
   \item Dati distribuiti uniformemente.
@@ -82,8 +96,8 @@
   \item Bilanciamento del carico a seguito di un fallimento.
   \item Si tiene conto dell'eterogeneità delle macchine.
   \end{itemize}
-  \end{block}
   $\longrightarrow$ In poche parole si ottiene una forte \alert{scalabilità}.
+  \end{block}
 \end{frame}
 
 
@@ -97,7 +111,7 @@
   \end{itemize}
   \begin{figure}
   \centering
-  \includegraphics[scale=0.3]{dynamo/replication.png}
+  \includegraphics[scale=0.35]{dynamo/replication.png}
   \end{figure}  
 \end{frame}
 
@@ -179,7 +193,7 @@
   $N = 4, W = 2, R = 3$
   \begin{figure}
   \centering
-  \includegraphics[scale=0.38]{dynamo/get.png}
+  \includegraphics[scale=0.4]{dynamo/get.png}
   \end{figure}
 \end{frame}
 
@@ -189,7 +203,7 @@
   $N = 4, W = 2, R = 3$
   \begin{figure}
   \centering
-  \includegraphics[scale=0.38]{dynamo/put.png}
+  \includegraphics[scale=0.4]{dynamo/put.png}
   \end{figure}
 \end{frame}
 
@@ -252,7 +266,7 @@
 
 \begin{frame}
   \frametitle{Gestione Fallimenti e Sincronia Repliche (II)}
-    In caso di fallimento di un semplente è necessario un mezzo per stabilire se due repliche sono sincronizzare:
+    In caso di fallimento di un supplente è necessario un mezzo per stabilire se due repliche sono sincronizzare:
     \begin{block}{Merkle tree}
     \begin{columns}
     \begin{column}{0.4\textwidth}
@@ -295,39 +309,39 @@
 \end{frame}
 
 
-\begin{frame}
-  \frametitle{Alcuni risultati}
-  \begin{itemize}
-  \item Dynamo è progettato per bilanciare consistency e availability.
-  \item Come impattano differenti tipi di fallimenti sulla coerenza?
-  \end{itemize}
+%% \begin{frame}
+%%   \frametitle{Alcuni risultati}
+%%   \begin{itemize}
+%%   \item Dynamo è progettato per bilanciare consistency e availability.
+%%   \item Come impattano differenti tipi di fallimenti sulla coerenza?
+%%   \end{itemize}
   
-  \begin{table}[ht]
-  \begin{center} 
-  \begin{tabular}{| r | r |}
-  \hline  
-  \textbf{\# Versioni} & \textbf{\% Client} \\   
-  \hline
-  \rowcolor{lightgray}
-  1                              & 99.94 \\
-  \hline
-  2                              & 0.00057 \\
-  \hline
-  \rowcolor{lightgray}
-  3                              & 0.00047 \\
-  \hline
-  4                              & 0.00009 \\ 
-  \hline
-  \end{tabular}
-  \end{center}
-  \end{table}
+%%   \begin{table}[ht]
+%%   \begin{center} 
+%%   \begin{tabular}{| r | r |}
+%%   \hline  
+%%   \textbf{\# Versioni} & \textbf{\% Client} \\   
+%%   \hline
+%%   \rowcolor{lightgray}
+%%   1                              & 99.94 \\
+%%   \hline
+%%   2                              & 0.00057 \\
+%%   \hline
+%%   \rowcolor{lightgray}
+%%   3                              & 0.00047 \\
+%%   \hline
+%%   4                              & 0.00009 \\ 
+%%   \hline
+%%   \end{tabular}
+%%   \end{center}
+%%   \end{table}
 
-  \begin{itemize}
-  \item La presenza di versioni divergenti è rara.
-  \item L'esperimento ha evidenziato che la principale causa di incoerenze è un numero troppo eleveto di scritture concorrenti, spesso
-    effettuate da bot e non da umani.
-  \end{itemize}
-\end{frame}
+%%   \begin{itemize}
+%%   \item La presenza di versioni divergenti è rara.
+%%   \item L'esperimento ha evidenziato che la principale causa di incoerenze è un numero troppo eleveto di scritture concorrenti, spesso
+%%     effettuate da bot e non da umani.
+%%   \end{itemize}
+%% \end{frame}
 
 
 \begin{frame}
