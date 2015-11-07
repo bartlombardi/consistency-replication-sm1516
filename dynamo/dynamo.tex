@@ -138,21 +138,28 @@
 
 
 \begin{frame}{Versionamento (II)}
+  Un esempio:
+  \begin{columns}
+    \begin{column}{0.4\textwidth}
+      \begin{figure}
+      \centering
+      \includegraphics[scale=0.4]{dynamo/versioning.png}
+      \end{figure}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      
+    \end{column}
+    \end{columns}  
+\end{frame}
+
+
+\begin{frame}{Versionamento (III)}
   Si ottiene un ordinamento parziale sulle versioni:
   \begin{itemize}
   \item Se $\vclock(x) < \vclock(y)$ allora la versione $y$ può sovrascrivere $x$.
   \item Altrimenti abbiamo un branching delle versioni che il sistema non può riconciliare autonomamente.
   \end{itemize}
-  
-  Un esempio:
-  \begin{figure}
-  \centering
-  \includegraphics[scale=0.3]{dynamo/versioning.png}
-  \end{figure}  
-\end{frame}
-
-
-\begin{frame}{Versionamento (III)}
+ 
   \begin{block}{Pro dell'uso dei vector clock}
     \begin{itemize}
     \item Rispetto all'utilizzo di un timestamp logico si ottiene un ordinamento parziale tra le versioni.
@@ -162,8 +169,7 @@
 
   \begin{block}{Contro}
     \begin{itemize}
-    \item La dimensione dei vector clock può crescere tanto...
-    \item ...in realtà solo in casi di ripetuti fallimenti o partizionamento della rete.
+    \item La dimensione dei vector clock può crescere tanto.
     \end{itemize}
   \end{block}
 \end{frame}
@@ -356,8 +362,7 @@
   \begin{block}{Svantaggi}
   \begin{itemize}
   \item La riconciliazione a carico del client complica il codice delle applicazioni.
-  \item Modificare dinamicamente i parametri $N, W, R$ per adattarsi alla situazione del sistema alleggerendo il traffico di richieste interne.
-  \item Applicazioni client-side più complesse che prevedano l'arrivo di varie versioni e la loro riconciliazione.
+  \item Impossibile modificare dinamicamente i parametri $N, W, R$ per adattarsi alla situazione del sistema alleggerendo il traffico di richieste interne.
   \end{itemize}
   \end{block}
 \end{frame}
