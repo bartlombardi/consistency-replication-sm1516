@@ -1,16 +1,22 @@
 \section{Dynamo}
 \begin{frame}
-  %\frametitle{Dynamo}
-  todo
+  \frametitle{Dynamo: Amazon's Highly Available Key-value Store}
+  Articolo di riferimento: \\
+  \begin{thebibliography}{9}
+  \bibitem{goldbach:congettura} DeCandia, G., Hastorum, D., Jampani, M., Kakalapati, G., Lakshman A., Pilchin, A.,
+    Sivasubramanian, S., Vosshall, P. \& Vogels, W.
+  \newblock Dynamo: Amazon's Highly Available Key-value Store
+  \newblock \emph{ACM SIGOPS Operating Systems Review (Vol. 41, No. 6, pp. 205-220)}, (2007, October)
+  \end{thebibliography}
 \end{frame}
 
-
+%DeCandia, G., Hastorun, D., Jampani, M., Kakulapati, G., Lakshman, A., Pilchin, A., ... & Vogels, W. (2007, October). Dynamo: amazon's highly available key-value store. In ACM SIGOPS Operating Systems Review (Vol. 41, No. 6, pp. 205-220). ACM.
 \begin{frame}
   \frametitle{Dynamo}
-  \begin{block}{Cos'è Dynamo:}
+  \begin{block}{Cos'è Dynamo}
   Dynamo è un sistema di key-value storage distribuito.
   \end{block}
-  \begin{block}{Obiettivi:}      
+  \begin{block}{Obiettivi}      
       \begin{itemize}
       \item ``Always on'' experience.
       \item Scalabilità.
@@ -69,7 +75,7 @@
   \frametitle{Partizionamento (II)}
   Dynamo propone una variante del consistent hashing: \\
   Si utilizzano i \alert{nodi virtuali} (tokens).
-  \begin{block}{Vantaggi:}
+  \begin{block}{Vantaggi}
   \begin{itemize}
   \item Dati distribuiti uniformemente.
   \item Aggiungere o togliere nodi influenza solo il ``successore''.
@@ -106,7 +112,7 @@
     \[
     \big[<\mathrm{nodo}, \mathrm{counter}> <n_2, c_2> ... <n_m, c_m> \big]
     \]
-
+    
   \begin{definizione}
     Siano $x$ e $y$ due versioni del medesimo oggetto, denotiamo con $\vclock(x)_z$ il vector clock di $x$ relativo al nodo $z$.
     \begin{multline*}
@@ -118,11 +124,12 @@
 
 
 \begin{frame}{Versionamento (II)}
-   Si ottiene un ordinamento parziale sulle versioni:
+  Si ottiene un ordinamento parziale sulle versioni:
   \begin{itemize}
   \item Se $\vclock(x) < \vclock(y)$ allora la versione $y$ può sovrascrivere $x$.
   \item Altrimenti abbiamo un branching delle versioni che il sistema non può riconciliare autonomamente.
   \end{itemize}
+  
   Un esempio:
   \begin{figure}
   \centering
@@ -132,14 +139,14 @@
 
 
 \begin{frame}{Versionamento (III)}
-  \begin{block}{Pro dell'uso dei vector clock:}
+  \begin{block}{Pro dell'uso dei vector clock}
     \begin{itemize}
     \item Rispetto all'utilizzo di un timestamp logico si ottiene un ordinamento parziale tra le versioni.
     \item I vari branch di versionamento vengono tutti individuati e ritornati per una riconcialiazione da parte del client.
     \end{itemize}
   \end{block}
 
-  \begin{block}{Contro:}
+  \begin{block}{Contro}
     \begin{itemize}
     \item La dimensione dei vector clock può crescere tanto...
     \item ...in realtà solo in casi di ripetuti fallimenti o partizionamento della rete.
@@ -189,12 +196,12 @@
 
 \begin{frame}
   \frametitle{Proprietà di un quorum-like system}
-  \begin{block}{Se $R + W > N:$}
+  \begin{block}{Se $R + W > N$}
     \begin{itemize}
       \item in assenza di fallimenti abbiamo \alert{strong consistency}.
     \end{itemize}
   \end{block}
-  \begin{block}{Se $R + W \leq N:$}
+  \begin{block}{Se $R + W \leq N$}
     \begin{itemize}
     \item ottengo \alert{eventual consistency} a vari livelli...
     \item $W = 1$: always writable (high availability).
@@ -205,13 +212,20 @@
 
 
 \begin{frame}
-  \frametitle{Rissumendo su $W, R$}
+  \frametitle{Rissumendo su $W, R$ e $N$}
+  \begin{figure}
+  \flushleft
+  \includegraphics[scale=0.4]{dynamo/consistency-trade-off.png}
+  \end{figure}
+  \begin{block}{Esempio}
+  \emph{High performance read engine}: Dynamo è pensato per essere un ``always writable'' data store, con $R=1$ e $W=N$ diventa un sistema ideale per servire tante letture con poche e rare scritture. 
+  \end{block}
 \end{frame}
 
 
 \begin{frame}
   \frametitle{Sloppy Quorum}
-  \begin{block}{Problema:}
+  \begin{block}{Problema}
     Bastano pochi fallimenti nella ``top $N$'' della preference list per impedire il raggiungimento del quorum.    
   \end{block}
   \begin{block}{Si utilizza lo ``sloppy quorum'':}
@@ -239,7 +253,7 @@
 \begin{frame}
   \frametitle{Gestione Fallimenti e Sincronia Repliche (II)}
     In caso di fallimento di un semplente è necessario un mezzo per stabilire se due repliche sono sincronizzare:
-    \begin{block}{Merkle tree:}
+    \begin{block}{Merkle tree}
     \begin{columns}
     \begin{column}{0.4\textwidth}
       \begin{itemize}
@@ -263,14 +277,14 @@
 
 \begin{frame}
   \frametitle{Membership e Rilevamento Fallimenti}
-  \begin{block}{Gestire l'appartenenza al sistema (membership):}
+  \begin{block}{Gestire l'appartenenza al sistema (membership)}
   \begin{itemize}
   \item Non è presente una vista centralizzata dei membri appartenenti al sistema.
   \item Le informazioni sui membri sono scambiate mediante un protocollo \alert{gossip based}.
   \item Presenza di nodi \alert{seed} individuati ``staticamente'', notificati immediatamente dei cambiamenti nel sistema.
   \end{itemize}
   \end{block}
-  \begin{block}{Rilevamento fallimenti:}
+  \begin{block}{Rilevamento fallimenti}
   \begin{itemize}
   \item Il concetto di fallimento è locale.
     %per A il nodo B è fallito se non risponde, indipendentemente dalle risposte che può dare agli altri nodi.
@@ -282,23 +296,54 @@
 
 
 \begin{frame}
-  \frametitle{Dynamo nella Pratica}
+  \frametitle{Alcuni risultati}
+  \begin{itemize}
+  \item Dynamo è progettato per bilanciare consistency e availability.
+  \item Come impattano differenti tipi di fallimenti sulla coerenza?
+  \end{itemize}
+  
+  \begin{table}[ht]
+  \begin{center} 
+  \begin{tabular}{| r | r |}
+  \hline  
+  \textbf{\# Versioni} & \textbf{\% Client} \\   
+  \hline
+  \rowcolor{lightgray}
+  1                              & 99.94 \\
+  \hline
+  2                              & 0.00057 \\
+  \hline
+  \rowcolor{lightgray}
+  3                              & 0.00047 \\
+  \hline
+  4                              & 0.00009 \\ 
+  \hline
+  \end{tabular}
+  \end{center}
+  \end{table}
+
+  \begin{itemize}
+  \item La presenza di versioni divergenti è rara.
+  \item L'esperimento ha evidenziato che la principale causa di incoerenze è un numero troppo eleveto di scritture concorrenti, spesso
+    effettuate da bot e non da umani.
+  \end{itemize}
 \end{frame}
 
 
 \begin{frame}
   \frametitle{Concludendo su Dynamo}
-  \begin{block}{Vantaggi di Dynamo:}
+  \begin{block}{Vantaggi di Dynamo}
     \begin{itemize}
     \item Scalabilità.
     \item Riconciliazione versioni gestita dal client.
     \item Coerenza, availability, latency, regolabili appositamente per un'istanza.
     \end{itemize}
   \end{block}
-  \begin{block}{Svantaggi:}
+  \begin{block}{Svantaggi}
   \begin{itemize}
   \item La riconciliazione a carico del client complica il codice delle applicazioni.
-  \item Modificare dinamicamente i parametri $N, W, R$ per adattarsi alla situazione del sistema alleggerendo il traffico di richieste interne. 
+  \item Modificare dinamicamente i parametri $N, W, R$ per adattarsi alla situazione del sistema alleggerendo il traffico di richieste interne.
+  \item Applicazioni client-side più complesse che prevedano l'arrivo di varie versioni e la loro riconciliazione.
   \end{itemize}
   \end{block}
 \end{frame}
