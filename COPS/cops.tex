@@ -5,7 +5,7 @@
   \begin{thebibliography}{9}
   \bibitem{goldbach:congettura} Wyatt Lloyd, M. J. Freedman, M. Kaminsky \& Vogels, D. G. Andersen
   \newblock Don't Settle for Eventual: Scalable Causal Consistency for Wide-Area Storage with COPS
-  \newblock \emph{Proceedings of the Twenty-Third ACM Symposium on Operating Systems Principles.}, (ACM, 2011)
+  \newblock \emph{Proceedings of the Twenty-Third ACM Symposium on Operating Systems Principles}, (ACM, 2011)
   \end{thebibliography}
 \end{frame}
 
@@ -247,12 +247,12 @@ si ritiene che in un sistema troppo grande potrebbero andare fuori controllo.
 \frametitle{Get Transaction}
 \begin{block}{Limiti di COPS}
 Leggere un insieme di chiavi dipendenti usando una singola operazione di \texttt{get}
-non assicura una consistenza causal+, anche se il data store implementa esso stesso
+non assicura una coerenza causal+, anche se il data store implementa esso stesso
 una politica di causal+ consistency.
 \end{block}
 \begin{block}{Novità di COPS-GT}
 COPS-GT offre un'operazione di \texttt{get\char`_trans} che permette di
-ritornare una visione consistente di più chiavi.
+ritornare una visione coerente di più chiavi.
 \end{block}
 Questo tipo di transazioni non richiedono locks, sono non bloccanti e
 vengono realizzate al più in due rounds.
@@ -284,7 +284,8 @@ COPS è un sistema che offre le seguenti caratteristiche:
 	\begin{itemize}
 		\item L'uso dei timestamp per la gestione dei conflitti è piuttosto semplice,
 			  tuttavia scegliere una modifica a favore di un'altra in questo modo
-			  permette di non considerare affatto un eventuale aggiornamento rilevante.
+			  permette potenzialmente di non considerare affatto un eventuale aggiornamento
+			  rilevante.
 	\end{itemize}
 \end{block}
 \end{frame}
