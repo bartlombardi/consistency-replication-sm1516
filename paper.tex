@@ -1,0 +1,119 @@
+\documentclass[twoside]{article}
+
+\usepackage{lipsum}
+
+\usepackage[sc]{mathpazo}
+\usepackage[utf8]{inputenc}
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage{graphicx}
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
+\usepackage{hyperref} % For hyperlinks in the PDF
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\Roman{subsection}} % Roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{$\bullet$ Gennaio 2016 $\bullet$} % Custom header text
+\fancyfoot[RO,LE]{\thepage} % Custom footer text
+\setlength\parindent{0pt}
+\setlength\parskip{10pt}
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{\vspace{-15mm}\fontsize{24pt}{10pt}\selectfont\textbf{Consistency and Replication}} % Article title
+
+\author{
+\large
+\textsc{Bartolomeo Lombardi, Amerigo Mancino, Andrea Segalini}\\[2mm] % Your name
+\normalsize Università degli Studi di Bologna \\ % Your institution
+\normalsize \href{mailto:bartolomeo.lombardi@studio.unibo.it}{bartolomeo.lombardi@studio.unibo.it}\\
+\normalsize \href{mailto:amerigo.mancino@studio.unibo.it}{amerigo.mancino@studio.unibo.it}\\
+\normalsize \href{mailto:andrea.segalini@studio.unibo.it}{andrea.segalini@studio.unibo.it}
+\vspace{-5mm}
+}
+\date{}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle 
+\thispagestyle{fancy} % All pages have headers and footers
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+
+\noindent
+Sistemi di storage moderni replicano i dati su più macchine al fine di garantirne persistenza, low latency e tolleranza ai guasti. La presenza di più repliche di un medesimo dato genera quindi problemi di coerenza fra i dati stessi. Tale coerenza può essere garantita mediante diversi modelli, ognuno con i propri punti di forza e le proprie debolezze. Chiaramente, non ne esiste uno valido in generale e la scelta deve essere fatta tenendo in considerazione quali proprietà del sistema riteniamo maggiormente rilevanti ai nostri scopi. Pertanto, prendendo in esame i due sistemi di key-value store distribuiti Amazon Dynamo e COPS, è stato possibile verificare, anche tramite confronti, come questi compromessi vengono raggiunti.
+
+\end{abstract}
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\begin{multicols}{2} % Two-column layout throughout the main article text
+
+\section{Introduzione}
+
+\lettrine[nindent=0em,lines=3]{O} gni applicazione necessita di un livello di coerenza che cambia a seconda degli scopi che vuole raggiungere e delle priorità che vuole ottenere. Infatti, nel 2000 è stato congetturato, e successivamente dimostrato, un risultato teorico che prova che in ogni sistema distribuito non è possibile soddisfare contemporaneamente tutte e tre le seguenti proprietà: \emph{availability}, ossia ogni richiesta riceve sempre una risposta su ciò che è riuscito o fallito non rimanendo mai in attesa indefinitamente, \emph{partition-tolerance}, ossia il sistema continua a funzionare nonostante arbitrarie perdite di messaggi, \emph{consistency}, ossia tutti i nodi vedono gli stessi dati simultaneamente. Questa conclusione è stata dimostrata nel 2002, dopo quasi trenta anni di ricerca, e va sotto il nome di Teorema CAP.
+Per descrivere alcuni differenti modelli di coerenza, utilizzeremo come esempio i punteggi di una partita di baseball, memorizzati all'interno di un key-value store distribuito, come mostrato di seguito:\\
+\begin{table*}[htb]
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{l*{10}{c}r}
+ \textbf{Team} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{RUNS} \\
+ \hline
+  \textbf{Visitors}     & 0 & 0 & 1 & 0 & 1 & 0 & 0 &  &  & 2 \\
+  \textbf{Home}         & 1 & 0 & 1 & 1 & 0 & 2 &   &  &  & 5 \\
+\end{tabular}
+}
+\end{table*}
+
+\textbf{Strong consistency.} La garanzia più alta che possiamo raggiungere fornisce ad ogni client che effettua operazioni di lettura sempre l'ultimo valore aggiornato. Per implementare tale livello, è necessario un alto livello di sincronizzazione tra i vari nodi, che per essere raggiunto esige attese, causando un calo delle performance e la partecipazione attiva di tutti i nodi. In riferimento all'esempio, è possibile che ci venga ritornato unicamente il punteggio 2-5.
+
+\textbf{Eventual Consistency.} Formalmente l'eventual consistency consente di ritornare un qualunque valore che è stato scritto su un dato che il client vuole leggere. In pratica, quello che questo livello garantisce è che se non vengono eseguiti nuovi aggiornamenti su un oggetto, eventualmente tutti gli accessi a quell'oggetto ritorneranno l'ultimo valore aggiornato.
+
+
+%----------------------------------------------------------------------------------------
+%	REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+\begin{thebibliography}{99} % Bibliography - this is intentionally simple in this template
+
+\bibitem[Figueredo and Wolf, 2009]{Figueredo:2009dg}
+Figueredo, A.~J. and Wolf, P. S.~A. (2009).
+\newblock Assortative pairing and life history strategy - a cross-cultural
+  study.
+\newblock {\em Human Nature}, 20:317--330.
+ 
+\end{thebibliography}
+
+%----------------------------------------------------------------------------------------
+
+\end{multicols}
+
+\end{document}
