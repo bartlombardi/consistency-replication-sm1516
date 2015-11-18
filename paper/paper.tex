@@ -26,7 +26,6 @@
 \renewcommand\thesubsection{\Roman{subsection}} % Roman numerals for subsections
 \titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
 \titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
-
 %\usepackage{fancyhdr} % Headers and footers
 %\pagestyle{fancy} % All pages have headers and footers
 %\fancyhead{} % Blank out the default header
@@ -36,6 +35,8 @@
 
 \usepackage{amsmath}
 
+\usepackage{subcaption}
+
 \usepackage{biblatex}
 \bibliography{bibliography}
 
@@ -43,10 +44,10 @@
 \setlength\parskip{10pt} % Spaziatura tra paragrafi
 
 %----------------------------------------------------------------------------------------
-% IMPOSTAZIONI DI FANCYHDR
+% IMPOSTAZIONI DI SILLABAZIONE
 %----------------------------------------------------------------------------------------
 
-\hyphenation{dynamo baseball}
+\hyphenation{dynamo baseball cluster} % Inserire le parole che non devono essere sillabate e spezzate da tex
 
 %----------------------------------------------------------------------------------------
 %	CUSTOM MACRO
@@ -146,23 +147,69 @@ Chiaramente, l'approccio intrapreso da Dynamo consente di tracciare branch di ve
 In Dynamo, sono implementati due modelli di coerenza, strong consistency ed eventual consistency, impostabili mediante dei parametri che governano direttamente anche performance, availability e persistenza dei dati. Questi ultimi parametri, sempre nel rispetto del Teorema CAP, consentono di bilanciare il sistema, permettendone un diverso uso in base alle esigenze.
 
 \textbf{Coerenza in Dynamo}. La coerenza delle operazioni è gestita con la tecnica del \emph{Quorum} [cite]. Il sistema permette di impostare due parametri: il numero di nodi dai quali viene atteso un acknowledge a seguito di una scrittura, detto $W$, e il numero di nodi che partecipa ad un'operazione di lettura, detto $R$. Facendo riferimento alla Figura \ref{fig:get}, nell'operazione di lettura, il client contatta il nodo A che diventa il coordinatore della richiesta e poi i restanti $N-1$ nodi che mantengono la replica del dato. Dopo aver cercato nella propria memoria secondaria il valore, A aspetta la risposta da almeno $R-1$ nodi (non $R$, poiché A stesso è conteggiato). I valori ritornati, a questo punto, possono appartenere tutti alla medesima versione, quindi essere tutti coerenti, oppure presentare versioni precedenti/successive o concorrenti. L'ordinamento parziale dalle versioni è ottenuto analizzando i vector clock degli oggetti. In caso di ordinamento esistente, il conflitto è risolto da A prendendo l'ultima versione, viceversa sono tornate al client tutte le versioni concorrenti collezionate, lasciando a quest'ultimo il compito di riunificare la biforcazione. L'operazione di scrittura (Figura \ref{fig:put}) avviene in maniera analoga: a differenza dei valori vengono aspettati gli acknowledge di conferma sulla scrittura avvenuta.
-\begin{figure}[H]
+%% VERSIONE NON AFFIANCATE
+%% \begin{figure}[H]
+%% \centering
+%% \resizebox{\columnwidth}{!}{%
+%% \includegraphics{img/get.png}
+%% }
+%% \caption{Timeline dell'esecuzione di \texttt{get(k)}}
+%% \label{fig:get}
+%% \end{figure}
+%% \begin{figure}[H]
+%% \centering
+%% \resizebox{\columnwidth}{!}{%
+%% \includegraphics{img/put.png}
+%% }
+%% \caption{Timeline dell'esecuzione di \texttt{put(k, v)}}
+%% \label{fig:put}
+%% \end{figure}
+%%
+%% VERSIONE CON BORDI AFFIANCATE
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
+\begin{minipage}[b]{0.48\textwidth}
+\fbox{
+\resizebox{0.95\textwidth}{!}{%
 \includegraphics{img/get.png}
+}
 }
 \caption{Timeline dell'esecuzione di \texttt{get(k)}}
 \label{fig:get}
-\end{figure}
-\begin{figure}[H]
-\centering
-\resizebox{\columnwidth}{!}{%
+\end{minipage}
+\enskip
+\begin{minipage}[b]{0.48\textwidth}
+\fbox{
+\resizebox{0.95\textwidth}{!}{%
 \includegraphics{img/put.png}
+}
 }
 \caption{Timeline dell'esecuzione di \texttt{put(k, v)}}
 \label{fig:put}
-\end{figure}
+\end{minipage}
+\end{figure*}
+%%
+%% VERSIONE SENZA BORDI AFFIANCATE
+%% \begin{figure*}[t]
+%% \centering
+%% \begin{minipage}[b]{0.45\textwidth}
+%% \resizebox{\columnwidth}{!}{%
+%% \includegraphics{img/get.png}
+%% }
+%% \caption{Timeline dell'esecuzione di \texttt{get(k)}}
+%% \label{fig:get}
+%% \end{minipage}
+%% \enskip
+%% \begin{minipage}[b]{0.45\textwidth}
+%% \resizebox{\columnwidth}{!}{%
+%% \includegraphics{img/put.png}
+%% }
+%% \caption{Timeline dell'esecuzione di \texttt{put(k, v)}}
+%% \label{fig:put}
+%% \end{minipage}
+%% \end{figure*}
 I parametri $W$ e $R$ mediano tra coerenza, availability, performance e persistenza dei dati. Se $W+R > N$ allora l'insieme dei nodi che hanno effettuato sicuramente l'ultima scrittura nel sistema si interseca con l'insieme dei nodi che rispondono in caso di lettura. Dunque abbiamo garanzia che l'ultimo valore scritto per una certa chiave sia ritornato sicuramente in caso di lettura poiché esiste almeno un nodo che lo possiede e che risponde alla richiesta. La garanzia di ritorno dell'ultima versione scritta corrisponde ad una strong consistency. Come ripetuto diverse volte, avere tale modello di coerenza implica la perdita di altre qualità. Alti valori di $W$ e $R$ comportano performance peggiori poiché sono attese un maggior numero di risposte ad ogni richiesta, allo stesso modo peggiora l'availability poiché sono necessari un maggior numero di nodi per completare un'operazione. In generale il sistema è usato in configurazione $W+R \leq N$ che implica il modello eventual consistency. Tuttavia più il valore $W+R$ si avvicina ad $N$, più aumenta la probabilità che i due insiemi sopracitati si intersechino e quindi l'ultimo valore letto sia anche l'ultimo scritto.
+
 \begin{figure*}[b]
 \centering
 \includegraphics[width=\textwidth,height=4cm]{img/COPSdesign.png}
