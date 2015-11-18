@@ -140,7 +140,7 @@ In questa sezione prendiamo in considerazione due noti sistemi di storage distri
 \big( \forall z \mathrel{:} \vclock(x)_z \leq \vclock(y)_z \big) \\
 \land \big( \exists z' \mathrel{:} \vclock(x)_{z'} < \vclock(y)_{z'} \big)
 \end{multline*}
-Chiaramente, l’approccio intrapreso da Dynamo consente di tracciare branch di versioni parallele ed operare una riconciliazione definita dal client, mentre in COPS, data la natura totale dell'ordinamento, in caso di conflitto, verrebbe sicuramente perso uno dei due rami divergenti. In quest'ultimo caso, la scelta fatta garantisce quindi una notevole semplicità nell'applicazione, mentre, al contrario, in Dynamo è necessario prevedere e gestire la ricezione di versioni concorrenti. Inoltre, la dimensione del vector clock può crescere molto, soprattutto in presenza di numerosi fallimenti, rendendo onerose le operazioni di analisi su di essi.
+Chiaramente, l'approccio intrapreso da Dynamo consente di tracciare branch di versioni parallele ed operare una riconciliazione definita dal client, mentre in COPS, data la natura totale dell'ordinamento, in caso di conflitto, verrebbe sicuramente perso uno dei due rami divergenti. In quest'ultimo caso, la scelta fatta garantisce quindi una notevole semplicità nell'applicazione, mentre, al contrario, in Dynamo è necessario prevedere e gestire la ricezione di versioni concorrenti. Inoltre, la dimensione del vector clock può crescere molto, soprattutto in presenza di numerosi fallimenti, rendendo onerose le operazioni di analisi su di essi.
 
 \textbf{Coerenza.} In COPS implementiamo \emph{causal+ consistency}, in quanto si vuole garantire la coerenza più forte possibile che permetta, al contempo, di soddisfare le caratteristiche \emph{ALPS} [ref?], nel rispetto del Teorema CAP. È impossibile quindi implementare livelli di coerenza maggiori, quali la strong consistency o la sequential consistency. In dettaglio, la causal+ consistency viene definita come la combinazione di due componenti: la causal consistency, definita nella Sezione \ref{sec:introduzione}, e la \emph{convergent conflict handling}, che garantisce che tutte le operazioni di \texttt{put} in conflitto vengano gestite allo stesso modo da tutti i nodi usando una funzione $h$ associativa e commutativa.
 In Dynamo, sono implementati due modelli di coerenza, strong consistency ed eventual consistency, impostabili mediante dei parametri che governano direttamente anche performance, availability e persistenza dei dati. Questi ultimi parametri, sempre nel rispetto del Teorema CAP, consentono di bilanciare il sistema, permettendone un diverso uso in base alle esigenze.
@@ -163,6 +163,26 @@ In Dynamo, sono implementati due modelli di coerenza, strong consistency ed even
 \label{fig:put}
 \end{figure}
 I parametri $W$ e $R$ mediano tra coerenza, availability, performance e persistenza dei dati. Se $W+R > N$ allora l'insieme dei nodi che hanno effettuato sicuramente l'ultima scrittura nel sistema si interseca con l'insieme dei nodi che rispondono in caso di lettura. Dunque abbiamo garanzia che l'ultimo valore scritto per una certa chiave sia ritornato sicuramente in caso di lettura poiché esiste almeno un nodo che lo possiede e che risponde alla richiesta. La garanzia di ritorno dell'ultima versione scritta corrisponde ad una strong consistency. Come ripetuto diverse volte, avere tale modello di coerenza implica la perdita di altre qualità. Alti valori di $W$ e $R$ comportano performance peggiori poiché sono attese un maggior numero di risposte ad ogni richiesta, allo stesso modo peggiora l'availability poiché sono necessari un maggior numero di nodi per completare un'operazione. In generale il sistema è usato in configurazione $W+R \leq N$ che implica il modello eventual consistency. Tuttavia più il valore $W+R$ si avvicina ad $N$, più aumenta la probabilità che i due insiemi sopracitati si intersechino e quindi l'ultimo valore letto sia anche l'ultimo scritto.
+\begin{figure*}[b]
+\centering
+\includegraphics[width=\textwidth,height=4cm]{img/COPSdesign.png}
+\caption{Design del sistema COPS}
+\label{fig:COPSdesign}
+\end{figure*}
+
+\textbf{Coerenza in COPS}.
+Ogni client possiede un contesto in cui vengono tracciate tutte le dipendenze causali fra le operazioni man mano che sono eseguite azioni di put e di get, creando quindi una rete come quella mostrata in Figura \ref{fig:dipendenze}: se si volesse effettuare un'operazione di put su $z_4$ dovrebbero essere controllate e soddisfatte tutte le sue dipendenze causali prima di procedere. Per minimizzare l'overhead che scaturisce da questo controllo, COPS si affida alle sole ``nearest dependencies'' (letteralmente ``dipendenze più vicine''), per cui, nel caso di $z_4$ diventa sufficiente verificare unicamente $y_1$ e $v_6$, dal momento che, ad esempio, se $v_6$ risulta soddisfatta allora lo risultano anche $t_2$ e $u_1$ per causal consistency.
+In COPS, come possiamo vedere in Figura \ref{fig:COPSdesign}, ogni datacenter possiede un cluster locale a cui i client possono far riferimento mediante la library associata.
+\begin{figure}[H]
+\centering
+\resizebox{\columnwidth}{!}{%
+\includegraphics{img/dipendenze.png}
+}
+\caption{Un semplice grafo delle dipendenze}
+\label{fig:dipendenze}
+\end{figure}
+Quando viene eseguita un'operazione di put al cluster locale, vengono controllate le dipendenze causali mediante un'operazione di dep\_check e, quindi, la scrittura ha effetto. Successivamente, in maniera asincrona, le richieste vengono inserite in una replication queue e spedite agli altri datacenter nella wide area, i quali, una volta ricevute, eseguiranno i dovuti controlli delle dipendenze causali (sempre mediante dep\_check), risolveranno eventuali conflitti e renderanno effettive le modifiche.
+Citiamo, a questo proposito, una variante del sistema, denominata COPS-GT, che fornisce anche un'operazione di get\_trans, la quale permette di ritornare una visione coerente di un insieme di chiavi: queste transazioni sono non bloccanti, non richiedono lock e vengono realizzate al più in due round. Nel primo vengono ritornate le ultime versioni disponibili nel cluster locale (insieme alle loro dipendenze), poi, dal momento che possono essere presenti ancora inconsistenze fra due elementi di questo gruppo, nel secondo round sono recuperate le versioni più recenti rispetto a quelle ritornate nel primo.
 
 \section{Conclusioni}
 \label{sec:conclusioni}
