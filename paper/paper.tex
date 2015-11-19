@@ -256,6 +256,12 @@ Nel primo vengono ritornate le ultime versioni disponibili nel cluster locale (i
 \end{figure*}
 
 \section{Conclusioni}
+In conclusione, COPS è utilizzato quando è necessario replicare i dati al fine di avvicinarli a più basi di client, ottenendo performance migliori sulle operazioni che sono eseguite localmente. L'unico modello di coerenza implementato, quello della causal+, fornisce un buon compromesso, essendo secondo solo alla strong e alla sequential consistency e garantendo al contempo rapide operazioni attraverso un oculato sistema di aggiornamento asincrono delle repliche (descritto in Sezione \ref{sec:dettagli-tecnici}). La persistenza dei dati è elevata, tollerando al meglio il fallimento di interi datacenter e contemplando la perdita dei soli aggiornamenti in coda, in attesa di essere spediti.
+Dynamo, al contrario, si presenta come un ambiente meglio adattabile alle situazioni: non riesce ad implementare lo stesso livello di coerenza di COPS in quanto non supporta la nozione di ``dipendenza'' ma è in grado di garantire strong consistency (a scapito di una pesante degradazione di performance e availability). Inoltre può essere configurato topologicamente per assomigliare a COPS, replicando i dati su tutti i nodi (impostando cioè N come il numero di nodi) e localizzandoli su scala geografica. Mantenere un modello di coerenza forte è molto oneroso per ampie distanze: infatti l'eventual, a differenza della causal+, che assicura coerenza dove è strettamente necessaria, mantiene ridotte le attese di sincronizzazione ma risulta essere molto fragile a fronte del lento completamento delle operazioni di aggiornamento.
+Dynamo si rivela quindi un sistema altamente flessibile e configurabile e, dall'analisi condotta, si è capito che simulando COPS tramite esso pagheremmo un prezzo troppo oneroso al fine di garantire una coerenza maggiore.
+
+In generale, in un sistema distribuito ci sono sempre due punti di vista da tener presente: il provider, interessato alla sincronizzazione dei processi fra le repliche e all'ordinamento delle operazioni, e l'ottica di un client, la cui priorità è rivolta alle garanzie che il sistema deve fornirgli come parte magari di un SLA. Quindi, a seconda delle necessità, degli interessi e della prospettiva client-centrica o data-centrica che scegliamo di adottare, verrà selezionato il modello di coerenza più congeniale.
+
 \label{sec:conclusioni}
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
