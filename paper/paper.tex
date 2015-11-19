@@ -35,6 +35,8 @@
 %\fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 \usepackage{amsmath}
+\usepackage{txfonts}
+\usepackage{enumitem}
 
 \usepackage{biblatex}
 \bibliography{bibliography}
@@ -115,9 +117,25 @@ Per descrivere alcuni differenti modelli di coerenza, utilizzeremo come esempio 
 \label{tab:punteggio-baseball}
 \end{table}
 
-\textbf{Strong consistency.} La garanzia più alta che possiamo raggiungere fornisce ad ogni client che effettua operazioni di lettura sempre l'ultimo valore aggiornato. Per implementare tale livello, è necessario un alto livello di sincronizzazione tra i vari nodi, che per essere raggiunto esige attese, causando un calo delle performance e la partecipazione attiva di tutti i nodi. In riferimento all'esempio, è possibile che ci venga ritornato unicamente il punteggio 2-5.
+\textbf{Strong consistency.} La garanzia più alta che possiamo raggiungere fornisce ad ogni client che effettua operazioni di lettura sempre l'ultimo valore aggiornato. Per implementare tale livello, è necessario un alto livello di sincronizzazione tra i vari nodi, che per essere raggiunto esige attese, causando un calo delle performance e la partecipazione attiva di tutti i nodi. In riferimento all'esempio, è possibile che ci venga ritornato unicamente il punteggio $2$-$5$.
 
 \textbf{Eventual Consistency.} Formalmente l'eventual consistency consente di ritornare un qualunque valore che è stato scritto su un dato che il client vuole leggere. In pratica, quello che questo livello garantisce è che se non vengono eseguiti nuovi aggiornamenti su un oggetto, eventualmente tutti gli accessi a quell'oggetto ritorneranno l'ultimo valore aggiornato.
+
+\textbf{Consistent Prefix.} Richiedendo consistent prefix, è garantito osservare una sequenza ordinata di scritture nel sistema. Eseguendo un'operazione di lettura, quindi, si osserva una versione del data store che è esistita in un qualche momento nel passato e i valori ritornati saranno coerenti con quella versione del data store. Nel nostro esempio, potranno esserci ritornati allora i punteggi $0$-$0$, $0$-$1$, $1$-$1$, $1$-$2$, $1$-$3$, $2$-$3$, $2$-$4$, $2$-$5$.
+
+\textbf{Bounded Staleness.} Definito un lasso di tempo $T$ nel sistema, la bounded staleness garantisce che un'operazione di lettura non ritorni un valore scritto prima di $T$. Quindi, prendendo come $T$ un inning, nel nostro esempio ci possono essere ritornati i punteggi $2$-$3$, $2$-$4$, $2$-$5$.
+
+\textbf{Monotonic Reads.} Se un client esegue un'operazione di lettura su un oggetto, è garantito che una successiva lettura sul medesimo oggetto restituirà lo stesso valore letto in precedenza o una sua versione successiva, mai precedente. In riferimento sempre al nostro esempio, dopo aver letto allora il punteggio $1$-$3$, potrà venir restituito ancora il punteggio $1$-$3$ oppure un punteggio successivo.
+
+\textbf{Read My Writes.}	Garantisce strong consistency negli aggiornamenti che un client scrive, eventual consistency negli altri casi. In altre parole, chi scrive leggerà il punteggio $2$-$5$, mentre per gli altri varrà quanto già detto per l'eventual consistency.
+
+\textbf{Causal Consistency.} Operazioni di memoria che potenzialmente sono causalmente collegate vengono viste da ogni nodo del sistema nello stesso ordine. Praticamente, definiamo una relazione fra operazioni, indicata con il simbolo $\rightsquigarrow$, che gode delle seguenti proprietà:
+\begin{enumerate}[topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
+\item Execution thread. Se a e b sono due operazioni in un singolo thread di esecuzione, allora a $\rightsquigarrow$ b se e sono se a accade prima di b.
+\item Gets from. Se a è un'operazione di put e b è un'operazione di get che ritorna il valore scritto da a allora vale a $\rightsquigarrow$ b.
+\item Transitivity. Se a, b e c sono tre operazioni e a $\rightsquigarrow$ b e b $\rightsquigarrow$ c, allora anche a $\rightsquigarrow$ c.
+\end{enumerate}
+I valori restituiti da una replica, in sostanza, sono coerenti con l'ordine appena definito da $\rightsquigarrow$.
 
 \section{Dettagli Tecnici}
 \label{sec:dettagli-tecnici}
@@ -163,12 +181,6 @@ In Dynamo, sono implementati due modelli di coerenza, strong consistency ed even
 \label{fig:put}
 \end{figure}
 I parametri $W$ e $R$ mediano tra coerenza, availability, performance e persistenza dei dati. Se $W+R > N$ allora l'insieme dei nodi che hanno effettuato sicuramente l'ultima scrittura nel sistema si interseca con l'insieme dei nodi che rispondono in caso di lettura. Dunque abbiamo garanzia che l'ultimo valore scritto per una certa chiave sia ritornato sicuramente in caso di lettura poiché esiste almeno un nodo che lo possiede e che risponde alla richiesta. La garanzia di ritorno dell'ultima versione scritta corrisponde ad una strong consistency. Come ripetuto diverse volte, avere tale modello di coerenza implica la perdita di altre qualità. Alti valori di $W$ e $R$ comportano performance peggiori poiché sono attese un maggior numero di risposte ad ogni richiesta, allo stesso modo peggiora l'availability poiché sono necessari un maggior numero di nodi per completare un'operazione. In generale il sistema è usato in configurazione $W+R \leq N$ che implica il modello eventual consistency. Tuttavia più il valore $W+R$ si avvicina ad $N$, più aumenta la probabilità che i due insiemi sopracitati si intersechino e quindi l'ultimo valore letto sia anche l'ultimo scritto.
-\begin{figure*}[b]
-\centering
-\includegraphics[width=\textwidth,height=4cm]{img/COPSdesign.png}
-\caption{Design del sistema COPS}
-\label{fig:COPSdesign}
-\end{figure*}
 
 \textbf{Coerenza in COPS}.
 Ogni client possiede un contesto in cui vengono tracciate tutte le dipendenze causali fra le operazioni man mano che sono eseguite azioni di put e di get, creando quindi una rete come quella mostrata in Figura \ref{fig:dipendenze}: se si volesse effettuare un'operazione di put su $z_4$ dovrebbero essere controllate e soddisfatte tutte le sue dipendenze causali prima di procedere. Per minimizzare l'overhead che scaturisce da questo controllo, COPS si affida alle sole ``nearest dependencies'' (letteralmente ``dipendenze più vicine''), per cui, nel caso di $z_4$ diventa sufficiente verificare unicamente $y_1$ e $v_6$, dal momento che, ad esempio, se $v_6$ risulta soddisfatta allora lo risultano anche $t_2$ e $u_1$ per causal consistency.
@@ -182,6 +194,12 @@ In COPS, come possiamo vedere in Figura \ref{fig:COPSdesign}, ogni datacenter po
 \label{fig:dipendenze}
 \end{figure}
 Quando viene eseguita un'operazione di put al cluster locale, vengono controllate le dipendenze causali mediante un'operazione di dep\_check e, quindi, la scrittura ha effetto. Successivamente, in maniera asincrona, le richieste vengono inserite in una replication queue e spedite agli altri datacenter nella wide area, i quali, una volta ricevute, eseguiranno i dovuti controlli delle dipendenze causali (sempre mediante dep\_check), risolveranno eventuali conflitti e renderanno effettive le modifiche.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth,height=4cm]{img/COPSdesign.png}
+\caption{Design del sistema COPS}
+\label{fig:COPSdesign}
+\end{figure*}
 Citiamo, a questo proposito, una variante del sistema, denominata COPS-GT, che fornisce anche un'operazione di get\_trans, la quale permette di ritornare una visione coerente di un insieme di chiavi: queste transazioni sono non bloccanti, non richiedono lock e vengono realizzate al più in due round. Nel primo vengono ritornate le ultime versioni disponibili nel cluster locale (insieme alle loro dipendenze), poi, dal momento che possono essere presenti ancora inconsistenze fra due elementi di questo gruppo, nel secondo round sono recuperate le versioni più recenti rispetto a quelle ritornate nel primo.
 
 \section{Conclusioni}
