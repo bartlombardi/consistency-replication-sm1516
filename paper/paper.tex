@@ -11,7 +11,7 @@
 \usepackage{microtype} % Slightly tweak font spacing for aesthetics
 
 \usepackage{graphicx}
-\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt, margin=2.5cm]{geometry} % Document margins
 \usepackage{multicol} % Used for the two-column layout of the document
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
 \usepackage{booktabs} % Horizontal rules in tables
@@ -53,7 +53,7 @@
 % IMPOSTAZIONI DI SILLABAZIONE
 %----------------------------------------------------------------------------------------
 
-\hyphenation{dynamo baseball cluster consistency COPS replication availability partition-tolerance Communications SIGOPS annual}
+\hyphenation{dynamo baseball cluster consistency COPS replication availability partition-tolerance Communications SIGOPS annual preserving performance}
 % Inserire le parole che non devono essere sillabate e spezzate da tex
 
 %----------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ Sistemi di storage moderni replicano i dati su più macchine al fine di garantir
 
 %----------------------------------------------------------------------------------------
 
-\vspace{20mm} % Spaziatura tra abstract e corpo articolo
+\vspace{15mm} % Spaziatura tra abstract e corpo articolo %% backup {20mm}
 
 %----------------------------------------------------------------------------------------
 %	ARTICLE CONTENTS
@@ -108,7 +108,7 @@ Sistemi di storage moderni replicano i dati su più macchine al fine di garantir
 \section{Introduzione}
 \label{sec:introduzione}
 \lettrine[nindent=0em,lines=2]{O} gni applicazione necessita di un livello di coerenza che cambia a seconda degli scopi che vuole raggiungere e delle priorità che vuole ottenere. Infatti, nel 2000 è stato congetturato, e successivamente dimostrato, un risultato teorico che prova che in ogni sistema distribuito non è possibile soddisfare contemporaneamente tutte e tre le seguenti proprietà: \emph{availability}, ossia ogni richiesta riceve sempre una risposta su ciò che è riuscito o fallito non rimanendo mai in attesa indefinitamente, \emph{partition-tolerance}, ossia il sistema continua a funzionare nonostante arbitrarie perdite di messaggi, \emph{consistency}, ossia tutti i nodi vedono gli stessi dati simultaneamente. Questa conclusione è stata dimostrata nel 2002, dopo quasi trenta anni di ricerca, e va sotto il nome di Teorema CAP.
-Per descrivere alcuni differenti modelli di coerenza, utilizzeremo come esempio i punteggi di una partita di baseball, memorizzati all'interno di un key-value store distribuito, come mostrato di seguito:
+Per descrivere alcuni differenti modelli di coerenza, utilizzeremo come esempio i punteggi di una partita di baseball \cite{bib:baseball}, memorizzati all'interno di un key-value store distribuito, come mostrato di seguito:
 \begin{table}[H]
 \centering
 \resizebox{\columnwidth}{!}{%
@@ -127,17 +127,17 @@ Per descrivere alcuni differenti modelli di coerenza, utilizzeremo come esempio 
 
 \textbf{Eventual Consistency.} Formalmente l'eventual consistency consente di ritornare un qualunque valore che è stato scritto su un dato che il client vuole leggere. In pratica, quello che questo livello garantisce è che se non vengono eseguiti nuovi aggiornamenti su un oggetto, eventualmente tutti gli accessi a quell'oggetto ritorneranno l'ultimo valore aggiornato.
 
-\textbf{Consistent Prefix.} Richiedendo consistent prefix, è garantito osservare una sequenza ordinata di scritture nel sistema. Eseguendo un'operazione di lettura, quindi, si osserva una versione del data store che è esistita in un qualche momento nel passato e i valori ritornati saranno coerenti con quella versione del data store. Nel nostro esempio, potranno esserci ritornati allora i punteggi $0$-$0$, $0$-$1$, $1$-$1$, $1$-$2$, $1$-$3$, $2$-$3$, $2$-$4$, $2$-$5$.
+\textbf{Consistent Prefix.} Richiedendo consistent prefix, è garantito osservare una sequenza ordinata di scritture nel sistema. Eseguendo un'operazione di lettura, quindi, si osserva una versione del data store che è esistita in un qualche momento nel passato e i valori ritornati saranno coerenti con quella versione del data store. Nell'esempio, potranno essere ritornati i punteggi $0$-$0$, $0$-$1$, $1$-$1$, $1$-$2$, $1$-$3$, $2$-$3$, $2$-$4$, $2$-$5$.
 
-\textbf{Bounded Staleness.} Definito un lasso di tempo $T$ nel sistema, la bounded staleness garantisce che un'operazione di lettura non ritorni un valore scritto prima di $T$. Quindi, prendendo come $T$ un inning, nel nostro esempio ci possono essere ritornati i punteggi $2$-$3$, $2$-$4$, $2$-$5$.
+\textbf{Bounded Staleness.} Definito un lasso di tempo $T$ nel sistema, la bounded staleness garantisce che un'operazione di lettura non ritorni un valore scritto prima di $T$. Quindi, prendendo come $T$ un inning, nell' esempio possono essere ritornati i punteggi $2$-$3$, $2$-$4$, $2$-$5$.
 
-\textbf{Monotonic Reads.} Se un client esegue un'operazione di lettura su un oggetto, è garantito che una successiva lettura sul medesimo oggetto restituirà lo stesso valore letto in precedenza o una sua versione successiva, mai precedente. In riferimento sempre al nostro esempio, dopo aver letto allora il punteggio $1$-$3$, potrà venir restituito ancora il punteggio $1$-$3$ oppure un punteggio successivo.
+\textbf{Monotonic Reads.} Se un client esegue un'operazione di lettura su un oggetto, è garantito che una successiva lettura sul medesimo oggetto restituirà lo stesso valore letto in precedenza o una sua versione successiva, mai precedente. In riferimento sempre al nostro esempio, dopo aver letto allora il punteggio $1$-$3$, potrà venir restituito ancora il punteggio $1$-$3$ oppure un qualunque punteggio successivo.
 
 \textbf{Read My Writes.} Garantisce strong consistency negli aggiornamenti che un client scrive, eventual consistency negli altri casi. In altre parole, chi scrive leggerà il punteggio $2$-$5$, mentre per gli altri varrà quanto già detto per l'eventual consistency.
 
 \textbf{Causal Consistency.} Operazioni di memoria che potenzialmente sono causalmente collegate vengono viste da ogni nodo del sistema nello stesso ordine. Praticamente, definiamo una relazione fra operazioni, indicata con il simbolo $\rightsquigarrow$, che gode delle seguenti proprietà:
 \begin{enumerate}[topsep=0pt,itemsep=-1ex,partopsep=1ex,parsep=1ex]
-\item Execution thread. Se a e b sono due operazioni in un singolo thread di esecuzione, allora a $\rightsquigarrow$ b se e sono se a accade prima di b.
+\item Execution thread. Se a e b sono due operazioni in un singolo thread di esecuzione, allora a $\rightsquigarrow$ b se e solo se a accade prima di b.
 \item Gets from. Se a è un'operazione di \texttt{put} e b è un'operazione di \texttt{get} che ritorna il valore scritto da a allora vale a $\rightsquigarrow$ b.
 \item Transitivity. Se a, b e c sono tre operazioni e a $\rightsquigarrow$ b e b $\rightsquigarrow$ c, allora anche a $\rightsquigarrow$ c.
 \end{enumerate}
@@ -148,7 +148,7 @@ I valori restituiti da una replica, in sostanza, sono coerenti con l'ordine appe
 %\lettrine[nindent=0em,lines=2]{I}
 In questa sezione prendiamo in considerazione due noti sistemi di storage distribuiti: \emph{COPS} (\emph{Cluster of Order Preserving Service})\cite{bib:COPS} e \emph{Amazon Dynamo}\cite{bib:dynamo}. Il primo è un sistema distribuito su scala geografica (quella che viene definita in gergo come “wide area”) con repliche identiche degli stessi dati dislocate in più datacenter. Il secondo, invece, è costituito da nodi, potenzialmente disposti in più datacenter distinti, in cui sono distribuiti e replicati i dati. La specifica afferma che in COPS questi dati non sono partizionati fra i vari datacenter che formano il sistema, ma replicati tra essi, mentre in Dynamo sono divisi nei diversi nodi e di ogni elemento ne esistono più copie.
 
-\textbf{Replicazione.} Per affrontare il problema della replicazione dobbiamo innanzi tutto sottolineare come in COPS ogni datacenter possieda una replica di tutti i dati, mentre in Dynamo la questione diventa più complessa, in quanto i dati non sono replicati su tutti i nodi ma solo su un numero $N$ (dove $N$ è un intero molto minore del numero totale di nodi di cui il sistema dispone). Inoltre, in quest'ultimo caso il partizionamento dei dati viene gestito tramite la tecnica del \emph{Consistent Hashing} \cite{bib:hashing}, che considera una tabella hash chiusa ad anello e con nodi disposti su di esso, al fine di delimitare gli intervalli con cui sono partizionati i dati (figura \ref{fig:consistent-hashing-ring}).
+\textbf{Replicazione.} Per affrontare il problema della replicazione dobbiamo innanzi tutto sottolineare come in COPS ogni datacenter possieda una replica di tutti i dati, mentre in Dynamo la questione diventa più complessa, in quanto i dati non sono replicati su tutti i nodi ma solo su un numero $N$ (dove $N$ è un intero molto minore del numero totale di nodi di cui il sistema dispone). Inoltre, in quest'ultimo caso il partizionamento dei dati viene gestito tramite la tecnica del \emph{Consistent Hashing} \cite{bib:hashing}, che considera una tabella hash chiusa ad anello e con nodi disposti su di esso, al fine di delimitare gli intervalli con cui sono partizionati i dati (Figura \ref{fig:consistent-hashing-ring}).
 \begin{figure}[H]
 \centering
 \resizebox{\columnwidth}{!}{%
@@ -231,10 +231,11 @@ In Dynamo, al contrario, sono implementati due modelli di coerenza, strong consi
 %% \label{fig:put}
 %% \end{minipage}
 %% \end{figure*}
+
 I parametri $W$ e $R$ mediano tra coerenza, availability, performance e persistenza dei dati. Se $W+R > N$ allora l'insieme dei nodi che hanno effettuato sicuramente l'ultima scrittura nel sistema si interseca con l'insieme dei nodi che rispondono in caso di lettura. Dunque abbiamo garanzia che l'ultimo valore scritto per una certa chiave sia ritornato sicuramente in caso di lettura poiché esiste almeno un nodo che lo possiede e che risponde alla richiesta. La garanzia di ritorno dell'ultima versione scritta corrisponde ad una strong consistency \cite{bib:vogels-blog}. Come ripetuto diverse volte, avere tale modello di coerenza implica la perdita di altre qualità. Alti valori di $W$ e $R$ comportano performance peggiori poiché sono attese un maggior numero di risposte ad ogni richiesta, allo stesso modo peggiora l'availability poiché sono necessari un maggior numero di nodi per completare un'operazione. In generale il sistema è usato in configurazione $W+R \leq N$ che implica il modello eventual consistency. Tuttavia più il valore $W+R$ si avvicina ad $N$, più aumenta la probabilità che i due insiemi sopracitati si intersechino e quindi l'ultimo valore letto sia anche l'ultimo scritto.
 
 \textbf{Coerenza in COPS}.
-Ogni client possiede un contesto in cui vengono tracciate tutte le dipendenze causali fra le operazioni man mano che sono eseguite azioni di \texttt{put} e di \texttt{get}, creando quindi una rete come quella mostrata in Figura \ref{fig:dipendenze}: se si volesse effettuare un'operazione di \texttt{put} su $z_4$ dovrebbero essere controllate e soddisfatte tutte le sue dipendenze causali prima di procedere. Per minimizzare l'overhead che scaturisce da questo controllo, COPS si affida alle sole ``nearest dependencies'' (letteralmente ``dipendenze più vicine''), per cui, nel caso di $z_4$ diventa sufficiente verificare unicamente $y_1$ e $v_6$, dal momento che, ad esempio, se $v_6$ risulta soddisfatta allora lo risultano anche $t_2$ e $u_1$ per causal consistency.
+Ogni client possiede un contesto in cui vengono tracciate tutte le dipendenze causali fra le operazioni man mano che sono eseguite azioni di \texttt{put} e di \texttt{get}, creando quindi un grafo come quello mostrato in Figura \ref{fig:dipendenze}: se si volesse effettuare un'operazione di \texttt{put} su $z_4$ dovrebbero essere controllate e soddisfatte tutte le sue dipendenze causali prima di procedere. Per minimizzare l'overhead che scaturisce da questo controllo, COPS si affida alle sole ``nearest dependencies'' (letteralmente ``dipendenze più vicine''), per cui, nel caso di $z_4$ diventa sufficiente verificare unicamente $y_1$ e $v_6$, dal momento che, ad esempio, se $v_6$ risulta soddisfatta allora lo risultano anche $t_2$ e $u_1$ per causal consistency.
 In COPS, come possiamo vedere in Figura \ref{fig:COPSdesign}, ogni datacenter possiede un cluster locale a cui i client possono far riferimento mediante la library associata.
 Quando viene eseguita un'operazione di \texttt{put} al cluster locale, vengono controllate le dipendenze causali mediante un'operazione di \texttt{dep\_check} e, quindi, la scrittura ha effetto. Successivamente, in maniera asincrona, le richieste vengono inserite in una replication queue e spedite agli altri datacenter nella wide area, i quali, una volta ricevute, eseguiranno i dovuti controlli delle dipendenze causali (sempre mediante \texttt{dep\_check}), risolveranno eventuali conflitti e renderanno effettive le modifiche.
 Citiamo, a questo proposito, una variante del sistema, denominata COPS-GT, che fornisce anche un'operazione di \texttt{get\_trans}, la quale permette di ritornare una visione coerente di un insieme di chiavi.
@@ -257,8 +258,7 @@ Nel primo vengono ritornate le ultime versioni disponibili nel cluster locale (i
 
 \section{Conclusioni}
 In conclusione, COPS è utilizzato quando è necessario replicare i dati al fine di avvicinarli a più basi di client, ottenendo performance migliori sulle operazioni che sono eseguite localmente. L'unico modello di coerenza implementato, quello della causal+, fornisce un buon compromesso, essendo secondo solo alla strong e alla sequential consistency e garantendo al contempo rapide operazioni attraverso un oculato sistema di aggiornamento asincrono delle repliche (descritto in Sezione \ref{sec:dettagli-tecnici}). La persistenza dei dati è elevata, tollerando al meglio il fallimento di interi datacenter e contemplando la perdita dei soli aggiornamenti in coda, in attesa di essere spediti.
-Dynamo, al contrario, si presenta come un ambiente meglio adattabile alle situazioni: non riesce ad implementare lo stesso livello di coerenza di COPS in quanto non supporta la nozione di ``dipendenza'' ma è in grado di garantire strong consistency (a scapito di una pesante degradazione di performance e availability). Inoltre può essere configurato topologicamente per assomigliare a COPS, replicando i dati su tutti i nodi (impostando cioè N come il numero di nodi) e localizzandoli su scala geografica. Mantenere un modello di coerenza forte è molto oneroso per ampie distanze: infatti l'eventual, a differenza della causal+, che assicura coerenza dove è strettamente necessaria, mantiene ridotte le attese di sincronizzazione ma risulta essere molto fragile a fronte del lento completamento delle operazioni di aggiornamento.
-Dynamo si rivela quindi un sistema altamente flessibile e configurabile e, dall'analisi condotta, si è capito che simulando COPS tramite esso pagheremmo un prezzo troppo oneroso al fine di garantire una coerenza maggiore.
+Dynamo, al contrario, si presenta come un ambiente meglio adattabile alle situazioni: non riesce ad implementare lo stesso livello di coerenza di COPS in quanto non supporta la nozione di ``dipendenza'' ma è in grado di garantire strong consistency (a scapito di una pesante degradazione di performance e availability). Inoltre può essere configurato topologicamente per assomigliare a COPS, replicando i dati su tutti i nodi (impostando cioè N come il numero di nodi) e localizzandoli su scala geografica. Mantenere un modello di coerenza forte è molto oneroso per ampie distanze mentre un modello eventual risulta troppo debole a causa dei lenti tempi di sincronizzazione dovuti alla lontananza. A differenza di questi la causal+, che assicura corenza nelle dipendenze quindi dove c'è reale necessità, mantiene ridotte le attese di sincronizzazione garantendo allo stesso stempo una buona coerenza generale. Dynamo si rivela quindi un sistema altamente flessibile e configurabile e, dall'analisi condotta, si è capito che simulando COPS tramite esso pagheremmo un prezzo troppo oneroso al fine di garantire una coerenza maggiore usando nodi localizzati su scala geografica. 
 
 In generale, in un sistema distribuito ci sono sempre due punti di vista da tener presente: il provider, interessato alla sincronizzazione dei processi fra le repliche e all'ordinamento delle operazioni, e l'ottica di un client, la cui priorità è rivolta alle garanzie che il sistema deve fornirgli come parte magari di un SLA. Quindi, a seconda delle necessità, degli interessi e della prospettiva client-centrica o data-centrica che scegliamo di adottare, verrà selezionato il modello di coerenza più congeniale.
 
@@ -266,16 +266,6 @@ In generale, in un sistema distribuito ci sono sempre due punti di vista da tene
 %----------------------------------------------------------------------------------------
 %	REFERENCE LIST
 %----------------------------------------------------------------------------------------
-
-%% \begin{thebibliography}{99}
-
-%% \bibitem[Figueredo and Wolf, 2009]{bib:consistent-hashing}
-%% Figueredo, A.~J. and Wolf, P. S.~A. (2009).
-%% \newblock Assortative pairing and life history strategy - a cross-cultural
-%%   study.
-%% \newblock {\em Human Nature}, 20:317--330.
- 
-%% \end{thebibliography}
 
 \printbibliography
 
