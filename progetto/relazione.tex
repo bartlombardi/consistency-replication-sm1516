@@ -153,7 +153,7 @@ instanziate dal Front-end.
 
 Per stabilire la comunicazione fra Front-end e Worker è stato usato un router e sono stati impostati
 gli indirizzi IP staticamente. Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
-la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula (*ref*).
+la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula (\cite{bib:baseball}).
 I comandi preceduti da \# sono da considerare eseguiti da utente root, il cui passaggio è consentito
 mediante il comando:
 \begin{lstlisting}[frame=trBL]
@@ -258,7 +258,7 @@ Dove \texttt{192.168.1.100} è l'indirizzo IP del front-end. Infine è bastato e
 # mount /var/lib/one/
 \end{lstlisting}
 
-Poi abbiamo configurato Qemu, l'interfaccia per permettere la visualizzazione delle macchine virtuali:
+Poi abbiamo configurato Qemu, l'interfaccia per permettere la simulazione delle macchine virtuali:
 \begin{lstlisting}[frame=trBL]
 # cat << EOT > /etc/libvirt/qemu.conf
 user  = "oneadmin"
@@ -277,10 +277,33 @@ mediante un comando di ping la prima volta, inspiegabilmente abbiamo ottenuto un
 era dovuto alla presenza di un firewall installato sul front-end che è stato, dunque, disabilitato
 permettendo alle due macchine di vedersi.
 
-\section{Configurazione mediante Sunstone}
+\section{Preparazione dell'ambiente}
 Come accennato in precedenza, ogni operazione in OpenNebula può essere fatta mediante
 il terminale a riga di comando oppure utilizzando l'apposita interfaccia grafica Sunstone. Nelle nostre
 prove abbiamo optato per la seconda opzione. Per accedere dunque alla Sunstone è sufficiente far puntare il
 browser web (del front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}.
+
+A questo punto, è stato necessario preparare le immagini da inserire nel template della virtual machine.
+Abbiamo quindi scaricato Ubuntu Server 14.04.3 LTS e dal front-end abbiamo eseguito:
+\begin{lstlisting}[frame=trBL]
+$ qemu-img create -f qcow2 disk_image.img 5G
+$ kvm -cpu host -smp 1 -m 1024 disk_image.img
+\end{lstlisting}
+
+Il sistema è stato impreziosito con:
+\begin{itemize}
+	\item installazione SSH
+\end{itemize}
+\begin{lstlisting}[frame=trBL]
+# apt-get install openssh-client openssh-server
+\end{lstlisting}
+\begin{itemize}
+\item installazione di JBoss
+\end{itemize}		  
+\begin{lstlisting}[frame=trBL]
+$ wget http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.tar.gz		  
+\end{lstlisting}
+
+\printbibliography
 
 \end{document}
