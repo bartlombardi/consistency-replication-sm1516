@@ -1,0 +1,114 @@
+% pdflatex paper.tex
+% biber paper.bcf
+% pdflate paper.tex (x2)
+
+\documentclass[twoside]{article}
+
+\usepackage[sc]{mathpazo}
+\usepackage[utf8]{inputenc}
+\usepackage[english,italian]{babel}
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage{graphicx}
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt, margin=2.5cm]{geometry} % Document margins
+%\usepackage{multicol} % Used for the two-column layout of the document
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
+\usepackage{hyperref} % For hyperlinks in the PDF
+
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
+
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\renewcommand\thesection{\Roman{section}} % Roman numerals for the sections
+\renewcommand\thesubsection{\Roman{subsection}} % Roman numerals for subsections
+\titleformat{\section}[block]{\large\scshape\centering}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\large}{\thesubsection.}{1em}{} % Change the look of the section titles
+%\usepackage{fancyhdr} % Headers and footers
+%\pagestyle{fancy} % All pages have headers and footers
+%\fancyhead{} % Blank out the default header
+%\fancyfoot{} % Blank out the default footer
+%\fancyhead[C]{$\bullet$ Gennaio 2016 $\bullet$} % Custom header text
+%\fancyfoot[RO,LE]{\thepage} % Custom footer text
+
+\usepackage{amsmath}
+\usepackage{txfonts}
+\usepackage{enumitem}
+
+\usepackage{subcaption}
+
+\usepackage{biblatex}
+\bibliography{bibliography}
+
+\setlength\parindent{0pt} % Nessuna rientranza ad inizio paragrafo
+\setlength\parskip{10pt} % Spaziatura tra paragrafi
+
+%----------------------------------------------------------------------------------------
+% IMPOSTAZIONI DI SILLABAZIONE
+%----------------------------------------------------------------------------------------
+
+\hyphenation{dynamo baseball cluster consistency COPS replication availability partition-tolerance Communications SIGOPS annual preserving performance}
+% Inserire le parole che non devono essere sillabate e spezzate da tex
+
+%----------------------------------------------------------------------------------------
+%	CUSTOM MACRO
+%----------------------------------------------------------------------------------------
+
+\newcommand{\vclock}{\mathrm{VC}} % VC
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\title{\vspace{-15mm}\fontsize{24pt}{10pt}\selectfont\textbf{Configurazione di application server in ambiente di cloud computing}} % Article title
+
+\author{
+\large
+\textsc{Bartolomeo Lombardi, Amerigo Mancino, Andrea Segalini}\\[2mm] % Your name
+\normalsize Università degli Studi di Bologna % Your institution
+\vspace{5mm} \\
+\normalsize \href{mailto:bartolomeo.lombardi@studio.unibo.it}{bartolomeo.lombardi@studio.unibo.it}\\
+\normalsize \href{mailto:amerigo.mancino@studio.unibo.it}{amerigo.mancino@studio.unibo.it}\\
+\normalsize \href{mailto:andrea.segalini@studio.unibo.it}{andrea.segalini@studio.unibo.it}
+\vspace{-5mm}
+}
+\date{Anno Accademico 2015-16}
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+\maketitle 
+%\thispagestyle{fancy} % All pages have headers and footers
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\begin{abstract}
+\noindent
+OpenNebula è un toolkit che offre una soluzione semplice ma flessibile per la costruzione e la gestione
+di soluzioni cloud e di centri di elaborazione dati distribuiti eterogenei.
+In questa breve relazione ci proponiamo di illustrare, passo per passo, il lavoro fatto, consistente
+nell'installazione e nella configurazione dei software OpenNebula e JBoss, oltre che nella scrittura
+di un piccolo programma JBoss volto a dimostrare le proprietà di tolleranza ai guasti e migrazione.
+Verranno poi discusse le varie problematiche incontrate e saranno mostrati i metodi che hanno portato
+alla loro risoluzione.
+\end{abstract}
+
+%----------------------------------------------------------------------------------------
+
+\vspace{15mm} % Spaziatura tra abstract e corpo articolo %% backup {20mm}
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\section{Introduzione}
+
+\end{document}
