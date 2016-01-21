@@ -17,9 +17,22 @@
 \usepackage{booktabs} % Horizontal rules in tables
 \usepackage{float} % Required for tables and figures in the multi-column environment - they need to be placed in specific locations with the [H] (e.g. \begin{table}[H])
 \usepackage{hyperref} % For hyperlinks in the PDF
+\usepackage{listings}
 
 \usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
 \usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
+
+\usepackage{geometry} % Impostazioni margini
+\geometry{a4paper,top=3cm,bottom=3cm,left=1.5cm,right=1.5cm,%
+    heightrounded,bindingoffset=5mm}
+    
+\usepackage{textcomp} % Impostazioni codici
+\usepackage[T1]{fontenc}
+\lstset{
+  basicstyle=\ttfamily,
+  columns=flexible,
+  upquote,
+}
 
 \usepackage{abstract} % Allows abstract customization
 \renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
@@ -109,6 +122,8 @@ alla loro risoluzione.
 %	ARTICLE CONTENTS
 %----------------------------------------------------------------------------------------
 
+
+
 \section{Introduzione: tecnologie utilizzate}
 Per creare un sistema di cloud e dimostrare quindi le proprietà di migrazione e
 tolleranza ai guasti volute ci si è serviti di due tecnologie principali:
@@ -129,5 +144,40 @@ tolleranza ai guasti volute ci si è serviti di due tecnologie principali:
 		  caching, oltre che di implementazione distribuita. Tutte queste caratteristiche la rendono una
 		  ottima piattaforma di sviluppo.
 \end{itemize}
+
+\section{Configurazione di OpenNebula}
+L'installazione di OpenNebula avviene in maniera differente a seconda del ruolo giocato dal componente.
+Si distingue il Front-end, ossia colui che esegue OpenNebula, instanzia le macchine virtuali sugli altri
+membri e gestisce di fatto l'intera rete cloud, e i Worker, i quali eseguono invece la macchine virtuali
+instanziate dal Front-end.
+
+Per stabilire la comunicazione fra Front-end e Worker è stato usato un router e sono stati impostati
+gli indirizzi IP staticamente. Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
+la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula (*ref*).
+I comandi preceduti da \# sono da considerare eseguiti da utente root, il cui passaggio è consentito
+mediante il comando:
+\begin{lstlisting}[frame=trBL]
+sudo su
+\end{lstlisting}
+mentre quelli preceduti da \$ vanno intesi eseguiti da oneadmin, creato durante l'installazione del
+repository.
+
+\section{Configurazione di OpenNebula su Front-end}
+In primo luogo abbiamo verificato il supporto alla virtualizzazione eseguendo il comando:
+\begin{lstlisting}[frame=trBL]
+grep -E 'svm|vmx' /proc/cpuinfo
+\end{lstlisting}
+
+Successivamente ci siamo curati di aggiungere il repository di OpenNebula:
+\begin{lstlisting}[frame=trBL]
+# wget -q -O- http://downloads.opennebula.org/repo/Ubuntu/repo.key | apt-key add -
+# echo "deb http://downloads.opennebula.org/repo/4.12/Ubuntu/14.04/ stable 
+  opennebula" \ > /etc/apt/sources.list.d/opennebula.list
+\end{lstlisting}
+e dell'installazione dei pacchetti necessari:
+\begin{lstlisting}[frame=trBL]
+# apt-get update
+# apt-get install opennebula opennebula-sunstone nfs-kernel-server
+\end{lstlisting}
 
 \end{document}
