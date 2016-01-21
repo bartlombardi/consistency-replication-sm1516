@@ -174,10 +174,113 @@ Successivamente ci siamo curati di aggiungere il repository di OpenNebula:
 # echo "deb http://downloads.opennebula.org/repo/4.12/Ubuntu/14.04/ stable 
   opennebula" \ > /etc/apt/sources.list.d/opennebula.list
 \end{lstlisting}
-e dell'installazione dei pacchetti necessari:
+
+E dell'installazione dei pacchetti necessari:
 \begin{lstlisting}[frame=trBL]
 # apt-get update
 # apt-get install opennebula opennebula-sunstone nfs-kernel-server
 \end{lstlisting}
+
+A questo punto è stata configurata la Sunstone, ossia l'interfaccia grafica di OpenNebula,
+e ciò è stato fatto modificando il file 
+\texttt{/etc/one/sunstone-server.conf}, sostituendo la riga \texttt{:host:} \texttt{127.0.0.1}
+con la riga \texttt{:host:} \texttt{0.0.0.0} e successivamente viene fatto il restart del servizio:
+\begin{lstlisting}[frame=trBL]
+# /etc/init.d/opennebula-sunstone restart
+\end{lstlisting}
+
+Dal momento che abbiamo usato delle macchine differenti nei nostri esperimenti, abbiamo optato
+per la configurazione di un network file system distribuito: è stato necessario dunque esportare
+\texttt{/var/lib/one/} dal front-end ai nodi worker, e aggiungere al file \texttt{/etc/exports}
+del front-end la riga:
+\begin{lstlisting}[frame=trBL]
+/var/lib/one/ *(rw,sync,no_subtree_check,root_squash)
+\end{lstlisting}
+
+Infine abbiamo fatto ripartire il servizio:
+\begin{lstlisting}[frame=trBL]
+# service nfs-kernel-server restart
+\end{lstlisting}
+
+OpenNebula ha bisogno poi di una chiave SSH senza password da ogni nodo (incluso il front-end)
+verso ogni altro nodo. Per far ciò, abbiamo eseguito i seguenti comandi:
+\begin{lstlisting}[frame=trBL]
+# su - oneadmin
+$ cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_key
+\end{lstlisting}
+
+E poi abbiamo aggiunto il seguente frammento al file \texttt{~/.ssh/config}:
+\begin{lstlisting}[frame=trBL]
+$ cat << EOT > ~/.ssh/config
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+EOT
+$ chmod 600 ~/.ssh/config
+\end{lstlisting}
+
+\section{Configurazione di OpenNebula su nodi Worker}
+I worker sono i nodi su cui vengono eseguite le macchine virtuali instanziate dal front-end.
+La configurazione è simile a quella eseguita fatta sul front-end: è stata scaricata la repo
+e installate tutte le dipendenze. Successivamente abbiamo scelto di usare il protocollo DHCP
+attraverso l'interfaccia eth0 e di utilizzare IP statici, come già detto, andando a sostituire
+quindi il file \texttt{/etc/network/interfaces} con:
+\begin{lstlisting}[frame=trBL]
+auto lo
+iface lo inet loopback
+
+auto br0
+iface br0 inet static
+        address 192.168.1.101 // indirizzo del worker
+        network 192.168.1.0
+        netmask 255.255.255.0
+        broadcast 192.168.0.255
+        gateway 192.168.0.1
+        bridge_ports eth0
+        bridge_fd 9
+        bridge_hello 2
+        bridge_maxage 12
+        bridge_stp off
+\end{lstlisting}
+
+Dopo aver fatto questi cambiamenti, abbiamo fatto ripartire il servizio:
+\begin{lstlisting}[frame=trBL]
+# /etc/init.d/networking restart
+\end{lstlisting}
+
+Poi abbiamo aggiunto al file \texttt{/etc/fstab} la riga:
+\begin{lstlisting}[frame=trBL]
+192.168.1.100:/var/lib/one/  /var/lib/one/  nfs   soft,intr,rsize=8192,wsize=8192,noauto
+\end{lstlisting}
+
+Dove \texttt{192.168.1.100} è l'indirizzo IP del front-end. Infine è bastato eseguire:
+\begin{lstlisting}[frame=trBL]
+# mount /var/lib/one/
+\end{lstlisting}
+
+Poi abbiamo configurato Qemu, l'interfaccia per permettere la visualizzazione delle macchine virtuali:
+\begin{lstlisting}[frame=trBL]
+# cat << EOT > /etc/libvirt/qemu.conf
+user  = "oneadmin"
+group = "oneadmin"
+dynamic_ownership = 0
+EOT
+\end{lstlisting}
+
+Per rendere effettivi i cambiamenti abbiamo fatto ripartire libvirt:
+\begin{lstlisting}[frame=trBL]
+# service libvirt-bin restart
+\end{lstlisting}
+
+Quando abbiamo provato a far comunicare il front-end con un worker attraverso il router
+mediante un comando di ping la prima volta, inspiegabilmente abbiamo ottenuto un fallimento. Questo
+era dovuto alla presenza di un firewall installato sul front-end che è stato, dunque, disabilitato
+permettendo alle due macchine di vedersi.
+
+\section{Configurazione mediante Sunstone}
+Come accennato in precedenza, ogni operazione in OpenNebula può essere fatta mediante
+il terminale a riga di comando oppure utilizzando l'apposita interfaccia grafica Sunstone. Nelle nostre
+prove abbiamo optato per la seconda opzione. Per accedere dunque alla Sunstone è sufficiente far puntare il
+browser web (del front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}.
 
 \end{document}
