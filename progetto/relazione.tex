@@ -23,7 +23,7 @@
 \usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
 
 \usepackage{geometry} % Impostazioni margini
-\geometry{a4paper,top=3cm,bottom=3cm,left=1.5cm,right=1.5cm,%
+\geometry{a4paper,top=3cm,bottom=3cm,left=1.16cm,right=1.16cm,%
     heightrounded,bindingoffset=5mm}
     
 \usepackage{textcomp} % Impostazioni codici
@@ -151,9 +151,10 @@ Si distingue il Front-end, ossia colui che esegue OpenNebula, instanzia le macch
 membri e gestisce di fatto l'intera rete cloud, e i Worker, i quali eseguono invece la macchine virtuali
 instanziate dal Front-end.
 
-Per stabilire la comunicazione fra Front-end e Worker è stato usato un router e sono stati impostati
-gli indirizzi IP staticamente. Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
-la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula (\cite{bib:baseball}).
+Per stabilire la comunicazione fra Front-end e Worker è stato usato un router, creando una rete ad hoc 
+e sono stati impostati gli indirizzi IP staticamente.
+Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
+la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula \cite{bib:opennebula}.
 I comandi preceduti da \# sono da considerare eseguiti da utente root, il cui passaggio è consentito
 mediante il comando:
 \begin{lstlisting}[frame=trBL]
@@ -181,10 +182,10 @@ E dell'installazione dei pacchetti necessari:
 # apt-get install opennebula opennebula-sunstone nfs-kernel-server
 \end{lstlisting}
 
-A questo punto è stata configurata la Sunstone, ossia l'interfaccia grafica di OpenNebula,
-e ciò è stato fatto modificando il file 
+A questo punto è stata configurata la Sunstone, ossia l'interfaccia grafica di OpenNebula:
+abbiamo quindi modificato il file 
 \texttt{/etc/one/sunstone-server.conf}, sostituendo la riga \texttt{:host:} \texttt{127.0.0.1}
-con la riga \texttt{:host:} \texttt{0.0.0.0} e successivamente viene fatto il restart del servizio:
+con la riga \texttt{:host:} \texttt{0.0.0.0}, eseguendo poi il restart del servizio:
 \begin{lstlisting}[frame=trBL]
 # /etc/init.d/opennebula-sunstone restart
 \end{lstlisting}
@@ -203,7 +204,7 @@ Infine abbiamo fatto ripartire il servizio:
 \end{lstlisting}
 
 OpenNebula ha bisogno poi di una chiave SSH senza password da ogni nodo (incluso il front-end)
-verso ogni altro nodo. Per far ciò, abbiamo eseguito i seguenti comandi:
+verso ogni altro nodo. Per impostarla, abbiamo eseguito i seguenti comandi:
 \begin{lstlisting}[frame=trBL]
 # su - oneadmin
 $ cp ~/.ssh/id_rsa.pub ~/.ssh/authorized_key
@@ -221,7 +222,7 @@ $ chmod 600 ~/.ssh/config
 
 \section{Configurazione di OpenNebula su nodi Worker}
 I worker sono i nodi su cui vengono eseguite le macchine virtuali instanziate dal front-end.
-La configurazione è simile a quella eseguita fatta sul front-end: è stata scaricata la repo
+La configurazione è simile a quella eseguita per il front-end: è stata scaricata la repo
 e installate tutte le dipendenze. Successivamente abbiamo scelto di usare il protocollo DHCP
 attraverso l'interfaccia eth0 e di utilizzare IP statici, come già detto, andando a sostituire
 quindi il file \texttt{/etc/network/interfaces} con:
@@ -275,7 +276,7 @@ Per rendere effettivi i cambiamenti abbiamo fatto ripartire libvirt:
 Quando abbiamo provato a far comunicare il front-end con un worker attraverso il router
 mediante un comando di ping la prima volta, inspiegabilmente abbiamo ottenuto un fallimento. Questo
 era dovuto alla presenza di un firewall installato sul front-end che è stato, dunque, disabilitato
-permettendo alle due macchine di vedersi.
+permettendo alle due macchine di vedersi e di comunicare.
 
 \section{Preparazione dell'ambiente}
 Come accennato in precedenza, ogni operazione in OpenNebula può essere fatta mediante
@@ -289,8 +290,9 @@ Abbiamo quindi scaricato Ubuntu Server 14.04.3 LTS e dal front-end abbiamo esegu
 $ qemu-img create -f qcow2 disk_image.img 5G
 $ kvm -cpu host -smp 1 -m 1024 disk_image.img
 \end{lstlisting}
+Come si vede abbiamo usato kvm \cite{bib:kvm} per la virtualizzazione.
 
-Il sistema è stato impreziosito con:
+Il sistema inoltre è stato impreziosito con:
 \begin{itemize}
 	\item installazione SSH
 \end{itemize}
@@ -302,6 +304,96 @@ Il sistema è stato impreziosito con:
 \end{itemize}		  
 \begin{lstlisting}[frame=trBL]
 $ wget http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.tar.gz		  
+\end{lstlisting}
+
+\section{Installazione di JBoss}
+In questo paragrafo illustreremo l'installazione di JBoss \cite{bib:jboss}
+che è stata eseguita sulla macchina virtuale che abbiamo precedentemente configurato. 
+In primo luogo è stato necessario scaricare JBoss e decomprimere
+l'archivio, poi abbiamo spostato la cartella così ottenuta nella directory imposta come
+home di JBoss:
+\begin{lstlisting}[frame=trBL]
+tar xfvz jboss-as-7.1.1.Final.tar.gz
+mv jboss-as-7.1.1.Final /opt/jboss
+\end{lstlisting}
+
+* modifica del file \texttt{/etc/hosts/} *
+
+In seguito abbiamo creato un nuovo utente, eseguendo lo script \texttt{/opt/jboss/bin/add-user.sh}.
+In questa dimostrazione è stato usato come nome utente \texttt{smuser} mentre come password abbiamo
+banalmente impostato \texttt{password}.
+Per configurare il Master affinché si possa comportare da domain controller si è modificato il file
+\texttt{host.xml} specificando il suo indirizzo IP, cosicché gli Slave si possano connettere:
+\begin{lstlisting}[frame=trBL]
+<interfaces>
+	<interface name="management">
+		<inet-address value="${jboss.bind.address.management:192.168.1.3}"/>
+	</interface>
+	<interface name="public">
+		<inet-address value="${jboss.bind.address:192.168.1.3}"/>
+	</interface>
+	<interface name="unsecured">
+		<inet-address value="${jboss.bind.unsecured:192.168.1.3}" />
+	</interface>
+</interfaces>
+\end{lstlisting}
+CONTROLLARE INDIRIZZO IP DEL MASTER 192.163.1.3
+
+CONFIGURAZIONE DELLO SLAVE
+
+Successivamente è stato installato il modulo \texttt{mod\char`_cluster} in modo tale da poterlo
+usare da load balancer per il cluster. Dopo aver scaricato il pacchetto e averlo estratto,
+si è spostata la cartella \texttt{httpd} in \texttt{opt/jboss/}:
+\begin{lstlisting}[frame=trBL]
+# wget
+  http://downloads.jboss.org/mod_cluster//1.2.0.Final/mod_cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
+tar xvf mod-cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
+cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
+\end{lstlisting}
+\'{E} stato anche necessario modificare il file \texttt{/opt/jboss/httpd/httpd/conf/httpd.conf}:
+\begin{lstlisting}[frame=trBL]
+ServerName master
+
+Listen 192.168.1.3:6666
+<VirtualHost 192.168.1.3:6666>
+
+<Directory />
+	Order deny,allow
+	Deny from all
+	Allow from 192.168.1.
+</Directory>
+
+KeepAliveTimeout 60
+MaxKeepAliveRequests 0
+
+ManagerBalancerName other-server-group
+AdvertiseFrequency 5
+
+<Location /mod_cluster_manager>
+	Order deny,allow
+	Deny from all
+	Allow from 192.168.1.
+</Location>
+</VirtualHost>
+\end{lstlisting}
+La direttiva di \texttt{Listener} permette di configurare l'indirizzo IP su cui il load balancer sarà
+in attesa delle richieste mentre il tag \texttt{VirtualHost} permette invece di specificare l’indirizzo IP e
+la porta di comunicazione tra il load balancer e gli application server.
+
+A questo punto non rimane che avviare httpd:
+\begin{lstlisting}[frame=trBL]
+/opt/jboss/httpd/sbin/apachectl start
+\end{lstlisting}
+
+Il servizio, nonostante si metta in moto correttamente, ci restituisce un warning indicante, a quanto pare,
+che l'application engine non è in grado di determinare in maniera affidabile il nome di dominio del server;
+in genere è dovuto a un problema di impostazione del file di configurazione di apache. Abbiamo ricontrollato
+le modifiche fatte ai nostri file e ci sembrano corrette, ragion per cui abbiamo ignorato questo problema
+proseguendo con l'avvio di JBoss.
+
+Per avviare JBoss è stato eseguito lo script:
+\begin{lstlisting}
+/opt/jboss/bin/domain.sh per avviare jboss
 \end{lstlisting}
 
 \printbibliography
