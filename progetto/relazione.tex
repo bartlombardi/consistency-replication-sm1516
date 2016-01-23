@@ -23,7 +23,7 @@
 \usepackage{paralist} % Used for the compactitem environment which makes bullet points with less space between them
 
 \usepackage{geometry} % Impostazioni margini
-\geometry{a4paper,top=3cm,bottom=3cm,left=1.16cm,right=1.16cm,%
+\geometry{a4paper,top=3cm,bottom=3cm,left=1.30cm,right=1.30cm,%
     heightrounded,bindingoffset=5mm}
     
 \usepackage{textcomp} % Impostazioni codici
@@ -317,7 +317,8 @@ tar xfvz jboss-as-7.1.1.Final.tar.gz
 mv jboss-as-7.1.1.Final /opt/jboss
 \end{lstlisting}
 
-* modifica del file \texttt{/etc/hosts/} *
+Per definire il Cluster è stato necessario decidere quanti Slave lo compongono e
+aggiungere i loro IP nel file \texttt{/etc/hosts}.
 
 In seguito abbiamo creato un nuovo utente, eseguendo lo script \texttt{/opt/jboss/bin/add-user.sh}.
 In questa dimostrazione è stato usato come nome utente \texttt{smuser} mentre come password abbiamo
@@ -337,7 +338,6 @@ Per configurare il Master affinché si possa comportare da domain controller si 
 	</interface>
 </interfaces>
 \end{lstlisting}
-CONTROLLARE INDIRIZZO IP DEL MASTER 192.163.1.3
 
 CONFIGURAZIONE DELLO SLAVE
 
@@ -346,7 +346,10 @@ usare da load balancer per il cluster. Dopo aver scaricato il pacchetto e averlo
 si è spostata la cartella \texttt{httpd} in \texttt{opt/jboss/}:
 \begin{lstlisting}[frame=trBL]
 # wget
-  http://downloads.jboss.org/mod_cluster//1.2.0.Final/mod_cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
+  http://downloads.jboss.org/mod_cluster//1.2.0.Final/
+  mod_cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
+\end{lstlisting}
+\begin{lstlisting}[frame=trBL]
 tar xvf mod-cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
 cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
 \end{lstlisting}
@@ -380,6 +383,12 @@ La direttiva di \texttt{Listener} permette di configurare l'indirizzo IP su cui 
 in attesa delle richieste mentre il tag \texttt{VirtualHost} permette invece di specificare l’indirizzo IP e
 la porta di comunicazione tra il load balancer e gli application server.
 
+\begin{figure}[!bp]
+\centering
+\includegraphics[width=13cm]{immagine1.png}
+\caption{Interfaccia di JBoss}\label{fig:1}
+\end{figure}
+
 A questo punto non rimane che avviare httpd:
 \begin{lstlisting}[frame=trBL]
 /opt/jboss/httpd/sbin/apachectl start
@@ -392,9 +401,26 @@ le modifiche fatte ai nostri file e ci sembrano corrette, ragion per cui abbiamo
 proseguendo con l'avvio di JBoss.
 
 Per avviare JBoss è stato eseguito lo script:
-\begin{lstlisting}
-/opt/jboss/bin/domain.sh per avviare jboss
+\begin{lstlisting}[frame=trBL]
+/opt/jboss/bin/domain.sh
 \end{lstlisting}
+
+A questo punto è possibile collegarsi all'interfaccia del servizio digitando l'indirizzo
+\texttt{http://192.168.1.3:9990/console/App.html} nel browser web. Dopo aver quindi eseguito il login, la
+schermata risultante non è molto dissimile a quella raffigurata in Figura \ref{fig:1}.
+
+Abbiamo creato una applicazione JBoss che banalmente usa una variabile di sessione per registrare
+e restituire, mediante operazioni di \texttt{get} e \texttt{put}, l'ora attuale. Ottenuto il war,
+è stato caricato su JBoss e ne è stato fatto il deploy. \'{E} stato quindi eseguito lo start di
+tutti i server. Generalmente l'applicazione di default esegue su Server-Three, raggiungibile dalla
+porta \texttt{8330}. Sono quindi stati fatti alcuni esperimenti di 
+\texttt{http://192.168.1.3:8330/cluster-demo/put.jsp} e 
+\texttt{http://192.168.1.3:8330/cluster-demo/get.jsp} che dimostrano il corretto funzionamento
+dell'applicazione.
+
+A questo punto abbiamo provato a fermare Server-Three, la sessione viene correttamente mantenuta
+su Server-One, che diventa il server di default. Si può verificare questo collegandosi ad esso
+mediante la porta \texttt{8080} (gli offset sono tutti specificati nel file \texttt{host.xml}).
 
 \printbibliography
 
