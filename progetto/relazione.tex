@@ -107,7 +107,7 @@
 \noindent
 OpenNebula è un toolkit che offre una soluzione semplice ma flessibile per la costruzione e la gestione
 di soluzioni cloud e di centri di elaborazione dati distribuiti eterogenei.
-In questa breve relazione ci proponiamo di illustrare, passo per passo, il lavoro fatto, consistente
+In questa breve relazione ci proponiamo di illustrare, passo dopo passo, il lavoro fatto, consistente
 nell'installazione e nella configurazione dei software OpenNebula e JBoss, oltre che nella scrittura
 di un piccolo programma JBoss volto a dimostrare le proprietà di tolleranza ai guasti e migrazione.
 Verranno poi discusse le varie problematiche incontrate e saranno mostrati i metodi che hanno portato
@@ -125,7 +125,7 @@ alla loro risoluzione.
 
 
 \section{Introduzione: tecnologie utilizzate}
-Per creare un sistema di cloud e dimostrare quindi le proprietà di migrazione e
+Per creare un sistema di cloud e poter dimostrare, di conseguenza, le proprietà di migrazione e
 tolleranza ai guasti volute ci si è serviti di due tecnologie principali:
 \begin{itemize}
 	\item OpenNebula \\
@@ -190,10 +190,10 @@ con la riga \texttt{:host:} \texttt{0.0.0.0}, eseguendo poi il restart del servi
 # /etc/init.d/opennebula-sunstone restart
 \end{lstlisting}
 
-Dal momento che abbiamo usato delle macchine differenti nei nostri esperimenti, abbiamo optato
+Dal momento che sono state usate delle macchine differenti nei nostri esperimenti, abbiamo optato
 per la configurazione di un network file system distribuito: è stato necessario dunque esportare
-\texttt{/var/lib/one/} dal front-end ai nodi worker, e aggiungere al file \texttt{/etc/exports}
-del front-end la riga:
+\texttt{/var/lib/one/} dal Front-end ai nodi Worker, e aggiungere al file \texttt{/etc/exports}
+del Front-end la riga:
 \begin{lstlisting}[frame=trBL]
 /var/lib/one/ *(rw,sync,no_subtree_check,root_squash)
 \end{lstlisting}
@@ -203,7 +203,7 @@ Infine abbiamo fatto ripartire il servizio:
 # service nfs-kernel-server restart
 \end{lstlisting}
 
-OpenNebula ha bisogno poi di una chiave SSH senza password da ogni nodo (incluso il front-end)
+OpenNebula ha bisogno poi di una chiave SSH senza password da ogni nodo (incluso il Front-end)
 verso ogni altro nodo. Per impostarla, abbiamo eseguito i seguenti comandi:
 \begin{lstlisting}[frame=trBL]
 # su - oneadmin
@@ -221,11 +221,11 @@ $ chmod 600 ~/.ssh/config
 \end{lstlisting}
 
 \section{Configurazione di OpenNebula su nodi Worker}
-I worker sono i nodi su cui vengono eseguite le macchine virtuali instanziate dal front-end.
-La configurazione è simile a quella eseguita per il front-end: è stata scaricata la repo
-e installate tutte le dipendenze. Successivamente abbiamo scelto di usare il protocollo DHCP
-attraverso l'interfaccia eth0 e di utilizzare IP statici, come già detto, andando a sostituire
-quindi il file \texttt{/etc/network/interfaces} con:
+I Worker sono i nodi su cui vengono eseguite le macchine virtuali instanziate dal Front-end.
+La configurazione è simile a quella appena illustrata per il Front-end: è stata scaricata la repo
+e sono state installate tutte le dipendenze. Successivamente data la nostra scelta di utilizzare
+il protocollo DHCP attraverso l'interfaccia eth0 e l'uso di IP statici, come anticipato prima,
+siamo andati a sostituire a sostituire il file \texttt{/etc/network/interfaces} con:
 \begin{lstlisting}[frame=trBL]
 auto lo
 iface lo inet loopback
@@ -254,12 +254,12 @@ Poi abbiamo aggiunto al file \texttt{/etc/fstab} la riga:
 192.168.1.100:/var/lib/one/  /var/lib/one/  nfs   soft,intr,rsize=8192,wsize=8192,noauto
 \end{lstlisting}
 
-Dove \texttt{192.168.1.100} è l'indirizzo IP del front-end. Infine è bastato eseguire:
+Dove \texttt{192.168.1.100} è l'indirizzo IP del Front-end. Infine è bastato eseguire:
 \begin{lstlisting}[frame=trBL]
 # mount /var/lib/one/
 \end{lstlisting}
 
-Poi abbiamo configurato Qemu, l'interfaccia per permettere la simulazione delle macchine virtuali:
+A questo punto abbiamo configurato Qemu, l'interfaccia che permette la simulazione delle macchine virtuali:
 \begin{lstlisting}[frame=trBL]
 # cat << EOT > /etc/libvirt/qemu.conf
 user  = "oneadmin"
@@ -273,19 +273,19 @@ Per rendere effettivi i cambiamenti abbiamo fatto ripartire libvirt:
 # service libvirt-bin restart
 \end{lstlisting}
 
-Quando abbiamo provato a far comunicare il front-end con un worker attraverso il router
+Quando abbiamo provato a far comunicare il Front-end con un Worker attraverso il router
 mediante un comando di ping la prima volta, inspiegabilmente abbiamo ottenuto un fallimento. Questo
-era dovuto alla presenza di un firewall installato sul front-end che è stato, dunque, disabilitato
-permettendo alle due macchine di vedersi e di comunicare.
+era dovuto alla presenza di un firewall installato sul Front-end che è stato, dunque, opportunamente
+disabilitato permettendo alle due macchine di vedersi e di comunicare.
 
 \section{Preparazione dell'ambiente}
 Come accennato in precedenza, ogni operazione in OpenNebula può essere fatta mediante
 il terminale a riga di comando oppure utilizzando l'apposita interfaccia grafica Sunstone. Nelle nostre
 prove abbiamo optato per la seconda opzione. Per accedere dunque alla Sunstone è sufficiente far puntare il
-browser web (del front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}.
+browser web (del Front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}.
 
 A questo punto, è stato necessario preparare le immagini da inserire nel template della virtual machine.
-Abbiamo quindi scaricato Ubuntu Server 14.04.3 LTS e dal front-end abbiamo eseguito:
+Abbiamo quindi scaricato Ubuntu Server 14.04.3 LTS e dal Front-end abbiamo eseguito:
 \begin{lstlisting}[frame=trBL]
 $ qemu-img create -f qcow2 disk_image.img 5G
 $ kvm -cpu host -smp 1 -m 1024 disk_image.img
@@ -317,7 +317,7 @@ tar xfvz jboss-as-7.1.1.Final.tar.gz
 mv jboss-as-7.1.1.Final /opt/jboss
 \end{lstlisting}
 
-Per definire il Cluster è stato necessario decidere quanti Slave lo compongono e
+Per definire il cluster è stato necessario decidere quanti Slave lo compongono e
 aggiungere i loro IP nel file \texttt{/etc/hosts}.
 
 In seguito abbiamo creato un nuovo utente, eseguendo lo script \texttt{/opt/jboss/bin/add-user.sh}.
@@ -405,8 +405,11 @@ Per avviare JBoss è stato eseguito lo script:
 /opt/jboss/bin/domain.sh
 \end{lstlisting}
 
-A questo punto è possibile collegarsi all'interfaccia del servizio digitando l'indirizzo
-\texttt{http://192.168.1.3:9990/console/App.html} nel browser web. Dopo aver quindi eseguito il login, la
+A questo punto è stato possibile collegarsi all'interfaccia del servizio digitando l'indirizzo
+\begin{lstlisting}[frame=trBL]
+http://192.168.1.3:9990/console/App.html
+\end{lstlisting}
+nel browser web. Dopo aver quindi eseguito il login, la
 schermata risultante non è molto dissimile a quella raffigurata in Figura \ref{fig:1}.
 
 Abbiamo creato una applicazione JBoss che banalmente usa una variabile di sessione per registrare
@@ -416,11 +419,20 @@ tutti i server. Generalmente l'applicazione di default esegue su Server-Three, r
 porta \texttt{8330}. Sono quindi stati fatti alcuni esperimenti di 
 \texttt{http://192.168.1.3:8330/cluster-demo/put.jsp} e 
 \texttt{http://192.168.1.3:8330/cluster-demo/get.jsp} che dimostrano il corretto funzionamento
-dell'applicazione.
+dell'applicazione, come si può osservare in Figura \ref{fig:2}.
 
-A questo punto abbiamo provato a fermare Server-Three, la sessione viene correttamente mantenuta
+A questo punto abbiamo provato a fermare Server-Three: la sessione viene correttamente mantenuta
 su Server-One, che diventa il server di default. Si può verificare questo collegandosi ad esso
 mediante la porta \texttt{8080} (gli offset sono tutti specificati nel file \texttt{host.xml}).
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=13cm]{immagine2.png}
+\caption{Esempio di esecuzione dell'applicazione JBoss}\label{fig:2}
+\end{figure}
+
+\section{Conclusioni e problematiche}
+
 
 \printbibliography
 
