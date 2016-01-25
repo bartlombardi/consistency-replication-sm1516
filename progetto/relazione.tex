@@ -282,16 +282,24 @@ disabilitato permettendo alle due macchine di vedersi e di comunicare.
 Come accennato in precedenza, ogni operazione in OpenNebula può essere fatta mediante
 il terminale a riga di comando oppure utilizzando l'apposita interfaccia grafica Sunstone. Nelle nostre
 prove abbiamo optato per la seconda opzione. Per accedere dunque alla Sunstone è sufficiente far puntare il
-browser web (del Front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}.
+browser web (del Front-end chiaramente) all'indirizzo \texttt{http://localhost:9869}. La schermata
+risultante non dovrebbe essere molto dissimile da quella mostrata in figura \ref{fig:3}.
+
+\begin{figure}[!bp]
+\centering
+\includegraphics[width=13cm]{immagine3.png}
+\caption{Sunstone di OpenNebula}\label{fig:3}
+\end{figure}
+
 
 A questo punto, è stato necessario preparare le immagini da inserire nel template della virtual machine.
 Abbiamo quindi scaricato Ubuntu Server 14.04.3 LTS e dal Front-end abbiamo eseguito:
 \begin{lstlisting}[frame=trBL]
 $ qemu-img create -f qcow2 disk_image.img 5G
-$ kvm -cpu host -smp 1 -m 1024 disk_image.img
+$ kvm -cpu host -smp 1 -m 1024 -cdrom nome_immagine.iso disk_image.img
 \end{lstlisting}
 Come si vede abbiamo usato kvm \cite{bib:kvm} per la virtualizzazione.
-
+\newpage
 Il sistema inoltre è stato impreziosito con:
 \begin{itemize}
 	\item installazione SSH
@@ -328,13 +336,13 @@ Per configurare il Master affinché si possa comportare da domain controller si 
 \begin{lstlisting}[frame=trBL]
 <interfaces>
 	<interface name="management">
-		<inet-address value="${jboss.bind.address.management:192.168.1.3}"/>
+		<inet-address value="${jboss.bind.address.management:192.168.1.4}"/>
 	</interface>
 	<interface name="public">
-		<inet-address value="${jboss.bind.address:192.168.1.3}"/>
+		<inet-address value="${jboss.bind.address:192.168.1.4}"/>
 	</interface>
 	<interface name="unsecured">
-		<inet-address value="${jboss.bind.unsecured:192.168.1.3}" />
+		<inet-address value="${jboss.bind.unsecured:192.168.1.4}" />
 	</interface>
 </interfaces>
 \end{lstlisting}
@@ -357,8 +365,8 @@ cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
 \begin{lstlisting}[frame=trBL]
 ServerName master
 
-Listen 192.168.1.3:6666
-<VirtualHost 192.168.1.3:6666>
+Listen 192.168.1.4:6666
+<VirtualHost 192.168.1.4:6666>
 
 <Directory />
 	Order deny,allow
@@ -417,8 +425,8 @@ e restituire, mediante operazioni di \texttt{get} e \texttt{put}, l'ora attuale.
 è stato caricato su JBoss e ne è stato fatto il deploy. \'{E} stato quindi eseguito lo start di
 tutti i server. Generalmente l'applicazione di default esegue su Server-Three, raggiungibile dalla
 porta \texttt{8330}. Sono quindi stati fatti alcuni esperimenti di 
-\texttt{http://192.168.1.3:8330/cluster-demo/put.jsp} e 
-\texttt{http://192.168.1.3:8330/cluster-demo/get.jsp} che dimostrano il corretto funzionamento
+\texttt{http://192.168.1.4:8330/cluster-demo/put.jsp} e 
+\texttt{http://192.168.1.4:8330/cluster-demo/get.jsp} che dimostrano il corretto funzionamento
 dell'applicazione, come si può osservare in Figura \ref{fig:2}.
 
 A questo punto abbiamo provato a fermare Server-Three: la sessione viene correttamente mantenuta
@@ -432,6 +440,9 @@ mediante la porta \texttt{8080} (gli offset sono tutti specificati nel file \tex
 \end{figure}
 
 \section{Conclusioni e problematiche}
+Il lavoro svolto ha permesso, attraverso la configurazione dei software OpenNebula e JBoss, di
+eseguire un'applicazione in ambiente di cloud computing e di dimostrare le proprietà di tolleranza ai guasti
+e migrazione.
 
 
 \printbibliography
