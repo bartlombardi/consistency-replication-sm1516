@@ -377,7 +377,7 @@ In seguito è stato modificato il file \texttt{host.xml}:
 \end{lstlisting}
 
 Chiaramente è stato necessario gestire l'autenticazione: nel file \texttt{host.xml}
-è stata cambiata la sezione security-realms, aggiungendo una nuova sezione server-identities
+è stata cambiata la sezione \texttt{security-realms}, aggiungendo una nuova sezione \texttt{server-identities}
 e modificando il valore dell'attributo value con quello in base64 della password dell'utente Slave,
 ossia \texttt{123123}:
 \begin{lstlisting}[frame=trBL]
@@ -393,7 +393,7 @@ ossia \texttt{123123}:
 </security-realms>
 \end{lstlisting}
 
-Successivamente è stato installato il modulo \texttt{mod\char`_cluster} in modo tale da poterlo
+Successivamente è stato installato nel Master il modulo \texttt{mod\char`_cluster} in modo tale da poterlo
 usare da load balancer per il cluster. Dopo aver scaricato il pacchetto e averlo estratto,
 si è spostata la cartella \texttt{httpd} in \texttt{opt/jboss/}:
 \begin{lstlisting}[frame=trBL]
@@ -451,7 +451,8 @@ Il servizio, nonostante si metta in moto correttamente, ci restituisce un warnin
 che l'application engine non è in grado di determinare in maniera affidabile il nome di dominio del server;
 in genere è dovuto a un problema di impostazione del file di configurazione di apache. Abbiamo ricontrollato
 le modifiche fatte ai nostri file e ci sembrano corrette, ragion per cui abbiamo ignorato questo problema
-proseguendo con l'avvio di JBoss.
+proseguendo con l'avvio di JBoss. Questo warning è automaticamente sparito una volta completata
+tutta la configurazione.
 
 Per avviare JBoss è stato eseguito lo script:
 \begin{lstlisting}[frame=trBL]
@@ -485,7 +486,19 @@ mediante la porta \texttt{8080} (gli offset sono tutti specificati nel file \tex
 \end{figure}
 
 \section{Conclusioni e problematiche}
-Il lavoro svolto ha permesso, attraverso la configurazione dei software OpenNebula e JBoss, di
+La configurazione dei software e dell'ambiente non è stata esente da problemi.
+Le principali complicazioni riscontrate riguardano in primo luogo l'installazione di OpenNebula:
+una volta scelto se installare il software come Worker, ad esempio, diventa particolarmente
+ostico modificare la suddetta configurazione e quindi eventualmente tornare indietro per 
+eseguire l'installazione come Front-end, a causa dei numerosi pacchetti e delle dipendenze che non vengono
+automaticamente eliminate con il comando di \texttt{autoremove}. In seguito, si è avuta qualche difficoltà
+anche nella configurazione di JBoss su virtual machine: in particolare, in seguito all'aggiunta
+dell'utente \texttt{slave1}, \texttt{httpd} ha generato un errore
+(causato probabilmente da alcuni nostri passaggi scorretti) che impediva il corretto
+funzionamento dell'applicazione.
+Questo problema è stato risolto unicamente ricaricando l'immagine di Ubuntu su OpenNebula e
+ripetendo tutti i passaggi per garantire il corretto funzionamento di JBoss. \\
+Il lavoro svolto ha quindi permesso, attraverso la configurazione dei software OpenNebula e JBoss, di
 eseguire un'applicazione in ambiente di cloud computing e di dimostrare le proprietà di tolleranza ai guasti
 e migrazione.
 
