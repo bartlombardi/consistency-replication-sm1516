@@ -224,7 +224,7 @@ $ chmod 600 ~/.ssh/config
 I Worker sono i nodi su cui vengono eseguite le macchine virtuali instanziate dal Front-end.
 La configurazione è simile a quella appena illustrata per il Front-end: è stata scaricata la repo
 e sono state installate tutte le dipendenze. Successivamente data la nostra scelta di utilizzare
-il protocollo DHCP attraverso l'interfaccia eth0 e l'uso di IP statici, come anticipato prima,
+il protocollo DHCP attraverso l'interfaccia \texttt{eth0} e l'uso di IP statici, come anticipato prima,
 siamo andati a sostituire a sostituire il file \texttt{/etc/network/interfaces} con:
 \begin{lstlisting}[frame=trBL]
 auto lo
@@ -232,7 +232,7 @@ iface lo inet loopback
 
 auto br0
 iface br0 inet static
-        address 192.168.1.101 // indirizzo del worker
+        address 192.168.1.101
         network 192.168.1.0
         netmask 255.255.255.0
         broadcast 192.168.0.255
@@ -243,6 +243,7 @@ iface br0 inet static
         bridge_maxage 12
         bridge_stp off
 \end{lstlisting}
+dove \texttt{192.168.1.101} rappresenta l'indirizzo del nostro Worker.
 
 Dopo aver fatto questi cambiamenti, abbiamo fatto ripartire il servizio:
 \begin{lstlisting}[frame=trBL]
@@ -300,7 +301,7 @@ $ kvm -cpu host -smp 1 -m 1024 -cdrom nome_immagine.iso disk_image.img
 \end{lstlisting}
 Come si vede abbiamo usato kvm \cite{bib:kvm} per la virtualizzazione.
 \newpage
-Il sistema inoltre è stato impreziosito con:
+Usando kvm, il sistema è stato impreziosito con:
 \begin{itemize}
 	\item installazione SSH
 \end{itemize}
@@ -313,13 +314,13 @@ Il sistema inoltre è stato impreziosito con:
 \begin{lstlisting}[frame=trBL]
 $ wget http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.tar.gz		  
 \end{lstlisting}
+Dopo aver fatto ciò, l'immagine è stata caricata su OpenNebula.
 
 \section{Installazione di JBoss}
 In questo paragrafo illustreremo l'installazione di JBoss \cite{bib:jboss}
 che è stata eseguita sulla macchina virtuale che abbiamo precedentemente configurato. 
-In primo luogo è stato necessario scaricare JBoss e decomprimere
-l'archivio, poi abbiamo spostato la cartella così ottenuta nella directory imposta come
-home di JBoss:
+In primo luogo è stato necessario decomprimere l'archivio di JBoss.
+Poi abbiamo spostato la cartella così ottenuta nella directory imposta come home di JBoss:
 \begin{lstlisting}[frame=trBL]
 tar xfvz jboss-as-7.1.1.Final.tar.gz
 mv jboss-as-7.1.1.Final /opt/jboss
@@ -347,7 +348,50 @@ Per configurare il Master affinché si possa comportare da domain controller si 
 </interfaces>
 \end{lstlisting}
 
-CONFIGURAZIONE DELLO SLAVE
+Per configurare uno Slave, invece, abbiamo caricato una nuova immagine di Ubuntu su OpenNebula
+e, dopo aver estratto JBoss e aver spostato la cartella risultante nella directory
+impostata come sua home, abbiamo creato un nuovo utente JBoss, impostando come
+user \texttt{slave1} e come password \texttt{123123}.
+In seguito è stato modificato il file \texttt{host.xml}:
+\newpage
+
+\begin{lstlisting}[frame=trBL]
+<host name="slave" xmlns="urn:jboss:domain:1.2">
+...
+<domain-controller>
+	<remote host="192.168.1.3" port="9999" security-realm="ManagementRealm"/>
+</domain-controller>
+...
+<interfaces>
+	<interface name="management">
+		<inet-address value="${jboss.bind.address.management:192.168.1.3}"/>
+	</interface>
+	<interface name="public">
+		<inet-address value="${jboss.bind.address:192.168.1.3}"/>
+	</interface>
+	<interface name="unsecured">
+		<inet-address value="${jboss.bind.unsecured:192.168.1.3}" />
+	</interface>
+</interfaces>
+...
+\end{lstlisting}
+
+Chiaramente è stato necessario gestire l'autenticazione: nel file \texttt{host.xml}
+è stata cambiata la sezione security-realms, aggiungendo una nuova sezione server-identities
+e modificando il valore dell'attributo value con quello in base64 della password dell'utente Slave,
+ossia \texttt{123123}:
+\begin{lstlisting}[frame=trBL]
+<security-realms>
+	<security-realm name="ManagementRealm">
+		<server-identities>
+			<secret value="MTIzMTIz="/>
+		</server-identities>
+	<authentication>
+		<properties path="mgmt-users.properties" relative-to="jboss.domain.config.dir"/>
+	</authentication>
+	</security-realm>
+</security-realms>
+\end{lstlisting}
 
 Successivamente è stato installato il modulo \texttt{mod\char`_cluster} in modo tale da poterlo
 usare da load balancer per il cluster. Dopo aver scaricato il pacchetto e averlo estratto,
@@ -362,6 +406,7 @@ tar xvf mod-cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
 cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
 \end{lstlisting}
 \'{E} stato anche necessario modificare il file \texttt{/opt/jboss/httpd/httpd/conf/httpd.conf}:
+\newpage
 \begin{lstlisting}[frame=trBL]
 ServerName master
 
@@ -415,7 +460,7 @@ Per avviare JBoss è stato eseguito lo script:
 
 A questo punto è stato possibile collegarsi all'interfaccia del servizio digitando l'indirizzo
 \begin{lstlisting}[frame=trBL]
-http://192.168.1.3:9990/console/App.html
+http://192.168.1.4:9990/console/App.html
 \end{lstlisting}
 nel browser web. Dopo aver quindi eseguito il login, la
 schermata risultante non è molto dissimile a quella raffigurata in Figura \ref{fig:1}.
