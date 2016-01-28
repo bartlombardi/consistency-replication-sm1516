@@ -155,6 +155,7 @@ Per stabilire la comunicazione fra Front-end e Worker è stato usato un router, 
 e sono stati impostati gli indirizzi IP staticamente.
 Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
 la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula \cite{bib:opennebula}.
+La configurazione della rete che abbiamo realizzato è mostrata in Figura \ref{fig:4}.
 I comandi preceduti da \# sono da considerare eseguiti da utente root, il cui passaggio è consentito
 mediante il comando:
 \begin{lstlisting}[frame=trBL]
@@ -162,6 +163,12 @@ sudo su
 \end{lstlisting}
 mentre quelli preceduti da \$ vanno intesi eseguiti da oneadmin, creato durante l'installazione del
 repository.
+
+\begin{figure}[!tbp]
+\centering
+\includegraphics[width=13cm]{immagine4.jpg}
+\caption{COnfigurazione della nostra rete}\label{fig:4}
+\end{figure}
 
 \section{Configurazione di OpenNebula su Front-end}
 In primo luogo abbiamo verificato il supporto alla virtualizzazione eseguendo il comando:
@@ -226,6 +233,7 @@ La configurazione è simile a quella appena illustrata per il Front-end: è stat
 e sono state installate tutte le dipendenze. Successivamente data la nostra scelta di utilizzare
 il protocollo DHCP attraverso l'interfaccia \texttt{eth0} e l'uso di IP statici, come anticipato prima,
 siamo andati a sostituire a sostituire il file \texttt{/etc/network/interfaces} con:
+\newpage
 \begin{lstlisting}[frame=trBL]
 auto lo
 iface lo inet loopback
@@ -300,7 +308,7 @@ $ qemu-img create -f qcow2 disk_image.img 5G
 $ kvm -cpu host -smp 1 -m 1024 -cdrom nome_immagine.iso disk_image.img
 \end{lstlisting}
 Come si vede abbiamo usato kvm \cite{bib:kvm} per la virtualizzazione.
-\newpage
+
 Usando kvm, il sistema è stato impreziosito con:
 \begin{itemize}
 	\item installazione SSH
@@ -353,7 +361,6 @@ e, dopo aver estratto JBoss e aver spostato la cartella risultante nella directo
 impostata come sua home, abbiamo creato un nuovo utente JBoss, impostando come
 user \texttt{slave1} e come password \texttt{123123}.
 In seguito è stato modificato il file \texttt{host.xml}:
-\newpage
 
 \begin{lstlisting}[frame=trBL]
 <host name="slave" xmlns="urn:jboss:domain:1.2">
@@ -380,6 +387,7 @@ Chiaramente è stato necessario gestire l'autenticazione: nel file \texttt{host.
 è stata cambiata la sezione \texttt{security-realms}, aggiungendo una nuova sezione \texttt{server-identities}
 e modificando il valore dell'attributo value con quello in base64 della password dell'utente Slave,
 ossia \texttt{123123}:
+\newpage
 \begin{lstlisting}[frame=trBL]
 <security-realms>
 	<security-realm name="ManagementRealm">
@@ -406,7 +414,6 @@ tar xvf mod-cluster-1.2.0.Final-linux2-x64-ssl.tar.gz
 cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
 \end{lstlisting}
 \'{E} stato anche necessario modificare il file \texttt{/opt/jboss/httpd/httpd/conf/httpd.conf}:
-\newpage
 \begin{lstlisting}[frame=trBL]
 ServerName master
 
