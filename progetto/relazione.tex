@@ -154,7 +154,8 @@ instanziate dal Front-end.
 Per stabilire la comunicazione fra Front-end e Worker è stato usato un router, creando una rete ad hoc 
 e sono stati impostati gli indirizzi IP staticamente.
 Il Front-end è stato installato su sistema Ubuntu 14.04 ed è stata seguita
-la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula \cite{bib:opennebula}.
+la procedura di installazione illustrata nella documentazione ufficiale di OpenNebula \cite{bib:opennebula},
+mentre sui Worker è stato montato Ubuntu 15.10.
 La configurazione della rete che abbiamo realizzato è mostrata in Figura \ref{fig:4}.
 I comandi preceduti da \# sono da considerare eseguiti da utente root, il cui passaggio è consentito
 mediante il comando:
@@ -251,7 +252,8 @@ iface br0 inet static
         bridge_maxage 12
         bridge_stp off
 \end{lstlisting}
-dove \texttt{192.168.1.101} rappresenta l'indirizzo del nostro Worker.
+dove \texttt{192.168.1.101} rappresenta l'indirizzo di uno dei nostri Worker.
+Per l'altro la procedura è assolutamente speculare.
 
 Dopo aver fatto questi cambiamenti, abbiamo fatto ripartire il servizio:
 \begin{lstlisting}[frame=trBL]
@@ -309,7 +311,7 @@ $ kvm -cpu host -smp 1 -m 1024 -cdrom nome_immagine.iso disk_image.img
 \end{lstlisting}
 Come si vede abbiamo usato kvm \cite{bib:kvm} per la virtualizzazione.
 
-Usando kvm, il sistema è stato impreziosito con:
+Usando kvm, quindi, il sistema è stato impreziosito con:
 \begin{itemize}
 	\item installazione SSH
 \end{itemize}
@@ -366,18 +368,18 @@ In seguito è stato modificato il file \texttt{host.xml}:
 <host name="slave" xmlns="urn:jboss:domain:1.2">
 ...
 <domain-controller>
-	<remote host="192.168.1.3" port="9999" security-realm="ManagementRealm"/>
+	<remote host="192.168.1.5" port="9999" security-realm="ManagementRealm"/>
 </domain-controller>
 ...
 <interfaces>
 	<interface name="management">
-		<inet-address value="${jboss.bind.address.management:192.168.1.3}"/>
+		<inet-address value="${jboss.bind.address.management:192.168.1.5}"/>
 	</interface>
 	<interface name="public">
-		<inet-address value="${jboss.bind.address:192.168.1.3}"/>
+		<inet-address value="${jboss.bind.address:192.168.1.5}"/>
 	</interface>
 	<interface name="unsecured">
-		<inet-address value="${jboss.bind.unsecured:192.168.1.3}" />
+		<inet-address value="${jboss.bind.unsecured:192.168.1.5}" />
 	</interface>
 </interfaces>
 ...
@@ -417,8 +419,8 @@ cp -R mod-cluster-1.2.0-linux2-x86-ssl/httpd /opt/jboss/
 \begin{lstlisting}[frame=trBL]
 ServerName master
 
-Listen 192.168.1.4:6666
-<VirtualHost 192.168.1.4:6666>
+Listen 192.168.1.5:6666
+<VirtualHost 192.168.1.5:6666>
 
 <Directory />
 	Order deny,allow
@@ -472,10 +474,9 @@ http://192.168.1.4:9990/console/App.html
 \end{lstlisting}
 nel browser web. Dopo aver quindi eseguito il login, la
 schermata risultante non è molto dissimile a quella raffigurata in Figura \ref{fig:1}.
-
 Abbiamo creato una applicazione JBoss che banalmente usa una variabile di sessione per registrare
 e restituire, mediante operazioni di \texttt{get} e \texttt{put}, l'ora attuale. Ottenuto il war,
-è stato caricato su JBoss e ne è stato fatto il deploy. \'{E} stato quindi eseguito lo start di
+ne è stato fatto l'upload su JBoss e, subito dopo, il deploy. \'{E} stato quindi eseguito lo start di
 tutti i server. Generalmente l'applicazione di default esegue su Server-Three, raggiungibile dalla
 porta \texttt{8330}. Sono quindi stati fatti alcuni esperimenti di 
 \texttt{http://192.168.1.4:8330/cluster-demo/put.jsp} e 
